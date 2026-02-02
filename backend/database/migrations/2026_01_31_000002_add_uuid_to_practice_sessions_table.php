@@ -1,0 +1,41 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('practice_sessions', function (Blueprint $table) {
+            $table->uuid('uuid')->after('id')->nullable();
+        });
+
+        // Populate existing records
+        DB::table('practice_sessions')->orderBy('id')->lazyById()->each(function ($session) {
+            DB::table('practice_sessions')->where('id', $session->id)->update(['uuid' => (string) Str::uuid()]);
+        });
+
+        // Make unique and not nullable
+        Schema::table('practice_sessions', function (Blueprint $table) {
+            $table->unique('uuid');
+            $table->uuid('uuid')->nullable(false)->change();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('practice_sessions', function (Blueprint $table) {
+            $table->dropColumn('uuid');
+        });
+    }
+};
