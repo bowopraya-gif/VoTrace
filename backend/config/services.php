@@ -38,7 +38,9 @@ return [
     ],
 
     'google_tts' => [
-        'credentials_path' => env('GOOGLE_TTS_CREDENTIALS'),
+        'credentials_path' => env('GOOGLE_TTS_CREDENTIALS_BASE64') 
+            ? json_decode(base64_decode(env('GOOGLE_TTS_CREDENTIALS_BASE64')), true) 
+            : env('GOOGLE_TTS_CREDENTIALS'),
         'hash_secret' => env('TTS_HASH_SECRET', 'default-dev-secret-change-in-production'),
         'default_voice' => env('GOOGLE_TTS_VOICE', 'en-US-Standard-C'),
         'default_language' => 'en-US',
