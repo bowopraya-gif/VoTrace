@@ -5,7 +5,12 @@
 nixPkgs = ["php83", "php83Packages.composer", "php83Extensions.pdo_mysql", "php83Extensions.mbstring", "php83Extensions.xml", "php83Extensions.curl"]
 
 [phases.install]
-cmds = ["composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist"]
+cmds = [
+    "mkdir -p storage/framework/{sessions,views,cache}",
+    "mkdir -p storage/logs",
+    "mkdir -p bootstrap/cache",
+    "composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist"
+]
 
 [phases.build]
 cmds = [
