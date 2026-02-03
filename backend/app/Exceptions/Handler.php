@@ -2,11 +2,21 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
 use Throwable;
 
 class Handler extends ExceptionHandler
 {
+    /**
+     * Handle unauthenticated user - return JSON for API
+     */
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        // Always return JSON for API backend
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    }
     /**
      * A list of exception types with their corresponding custom log levels.
      *
