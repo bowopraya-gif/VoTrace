@@ -35,8 +35,8 @@ export default function AudioPlayer({ src, autoPlay = true, onEnded, disabled = 
     const getFullUrl = (url: string) => {
         if (!url) return '';
         if (url.startsWith('http')) return url;
-        // Hardcoded for now based on api.ts or env. Ideally use env var VITE_BACKEND_URL
-        const baseUrl = 'http://localhost:8000';
+        // Use environment variable for backend URL
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
         return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
     };
 

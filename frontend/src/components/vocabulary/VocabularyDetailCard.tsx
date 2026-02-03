@@ -110,7 +110,7 @@ export const VocabularyDetailCard: React.FC<Props> = ({ vocabulary: initialData,
                             <button
                                 onClick={() => {
                                     if (formData.audio_url) {
-                                        const baseUrl = 'http://localhost:8000';
+                                        const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
                                         const url = formData.audio_url.startsWith('http')
                                             ? formData.audio_url
                                             : `${baseUrl}${formData.audio_url.startsWith('/') ? '' : '/'}${formData.audio_url}`;

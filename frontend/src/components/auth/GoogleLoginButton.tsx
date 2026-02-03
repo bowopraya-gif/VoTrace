@@ -13,7 +13,8 @@ export function GoogleLoginButton({
 }: GoogleLoginButtonProps) {
     const handleGoogleLogin = () => {
         // Redirect to backend OAuth endpoint
-        window.location.href = 'http://localhost:8000/api/auth/google/redirect';
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        window.location.href = `${backendUrl}/auth/google/redirect`;
     };
 
     return (

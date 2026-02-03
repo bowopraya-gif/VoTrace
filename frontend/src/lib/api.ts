@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api',
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -85,7 +85,8 @@ api.interceptors.response.use(
             error.config._retry = true;
 
             // CSRF token mismatch, refresh cookie and retry
-            await axios.get('http://localhost:8000/sanctum/csrf-cookie', { withCredentials: true });
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
+            await axios.get(`${baseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
             return api.request(error.config);
         }
 

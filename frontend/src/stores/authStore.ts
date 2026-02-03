@@ -9,7 +9,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     login: async (credentials) => {
         // Get CSRF cookie first
-        await api.get('/sanctum/csrf-cookie', { baseURL: 'http://localhost:8000' });
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
+        await api.get('/sanctum/csrf-cookie', { baseURL: baseUrl });
 
         // Login
         try {
@@ -33,7 +34,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     register: async (data) => {
-        await api.get('/sanctum/csrf-cookie', { baseURL: 'http://localhost:8000' });
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
+        await api.get('/sanctum/csrf-cookie', { baseURL: baseUrl });
         // Registration now sends OTP, does not return token immediately
         const response = await api.post('/register', data);
         // Use user data if available, but they are not authenticated yet
