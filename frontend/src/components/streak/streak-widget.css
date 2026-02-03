@@ -369,6 +369,25 @@
     }
 }
 
+/* Bump Animation for Optimistic Update */
+.bump-anim {
+    animation: bumpScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes bumpScale {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.4);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
 /* Tooltip - Top Right Position */
 .streak-widget-tooltip {
     position: absolute;

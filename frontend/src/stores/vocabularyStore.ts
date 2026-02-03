@@ -97,11 +97,16 @@ export const useVocabularyStore = create<VocabularyState>((set, get) => ({
     addVocabulary: async (data) => {
         set({ isLoading: true, error: null });
         try {
-            await api.post('/vocabularies', data);
+            // Inject Timezone for accurate streak calculation
+            const payload = {
+                ...data,
+                tz: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+            await api.post('/vocabularies', payload);
             await get().fetchVocabularies(1); // Refresh list
 
-            // Real-time streak update
-            useStreakStore.getState().fetchStatus();
+            // Optimistic Streak Update
+            useStreakStore.getState().incrementOptimistically();
         } catch (error: any) {
             throw error;
         } finally {

@@ -8,11 +8,24 @@ import './streak-widget.css';
 export default function StreakWidget() {
     const { status, fetchStatus, isLoading } = useStreakStore();
     const [mounted, setMounted] = useState(false);
+    const [bump, setBump] = useState(false);
+    const [prevStreak, setPrevStreak] = useState(0);
 
     useEffect(() => {
         setMounted(true);
         fetchStatus();
     }, [fetchStatus]);
+
+    useEffect(() => {
+        if (status?.current_streak && status.current_streak > prevStreak) {
+            setBump(true);
+            const timer = setTimeout(() => setBump(false), 300);
+            return () => clearTimeout(timer);
+        }
+        if (status?.current_streak) {
+            setPrevStreak(status.current_streak);
+        }
+    }, [status?.current_streak, prevStreak]);
 
     if (!mounted || isLoading || !status) return null;
 
@@ -100,7 +113,7 @@ export default function StreakWidget() {
                         </div>
 
                         {/* Count Badge */}
-                        <div className={`streak-count-badge ${badgeClass}`}>
+                        <div className={`streak-count-badge ${badgeClass} ${bump ? 'bump-anim' : ''}`}>
                             {currentStreak}
                         </div>
                     </div>
