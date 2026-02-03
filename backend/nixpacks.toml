@@ -4,6 +4,7 @@
 [phases.setup]
 nixPkgs = [
     "php81",
+    "php81Packages.composer",
     "php81Extensions.pdo_mysql",
     "php81Extensions.mbstring",
     "php81Extensions.xml",
