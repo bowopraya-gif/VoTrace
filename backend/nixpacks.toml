@@ -2,7 +2,7 @@
 # Optimized for fast builds under 10 minutes
 
 [phases.setup]
-nixPkgs = ["php81", "php81Packages.composer"]
+nixPkgs = ["php81", "php81Packages.composer", "php81Extensions.pdo_mysql", "php81Extensions.mbstring", "php81Extensions.xml", "php81Extensions.curl"]
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist"]
