@@ -36,7 +36,7 @@ export default function DashboardPage() {
                     <div className="flex justify-between h-16">
                         <div className="flex">
                             <div className="flex-shrink-0 flex items-center">
-                                <span className="font-bold text-2xl text-primary">VoTrack</span>
+                                <span className="font-bold text-2xl text-primary">VoTrace</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">

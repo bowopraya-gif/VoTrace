@@ -8,7 +8,7 @@ import { AuthInitializer } from '@/components/auth/AuthInitializer';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "VoTrack - Master Your Vocabulary",
+  title: "VoTrace - Master Your Vocabulary",
   description: "Track, learn, and master English vocabulary with AI.",
 };
 

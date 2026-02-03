@@ -30,7 +30,7 @@ export const AuthLayout = ({ children, title, subtitle }: { children: React.Reac
                         <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center font-bold text-xl">
                             V
                         </div>
-                        <span className="text-2xl font-bold tracking-tight">VoTrack</span>
+                        <span className="text-2xl font-bold tracking-tight">VoTrace</span>
                     </div>
                     <div className="mt-20 max-w-md">
                         <h1 className="text-4xl font-bold leading-tight">
@@ -43,7 +43,7 @@ export const AuthLayout = ({ children, title, subtitle }: { children: React.Reac
                 </div>
 
                 <div className="text-sm text-primary-50 text-opacity-70">
-                    © {new Date().getFullYear()} VoTrack. All rights reserved.
+                    © {new Date().getFullYear()} VoTrace. All rights reserved.
                 </div>
             </div>
 

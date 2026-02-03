@@ -3,7 +3,7 @@
 
 Hi {{ $userName }},
 
-We detected a successful login to your VoTrack account from a new device.
+We detected a successful login to your VoTrace account from a new device.
 
 **Login Details:**
 - **Time:** {{ $loginTime }}
@@ -26,6 +26,6 @@ Stay safe,<br>
 {{ config('app.name') }} Security Team
 
 @component('mail::subcopy')
-This is an automated security alert. You're receiving this because you have a VoTrack account associated with this email address.
+This is an automated security alert. You're receiving this because you have a VoTrace account associated with this email address.
 @endcomponent
 @endcomponent

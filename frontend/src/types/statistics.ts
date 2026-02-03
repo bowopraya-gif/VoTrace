@@ -1,4 +1,4 @@
-// Statistics Types for VoTrack
+// Statistics Types for VoTrace
 
 export type StatsPeriod = '7d' | '30d' | 'year' | 'all';
 

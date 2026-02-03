@@ -18,7 +18,7 @@
         </div>
         <div class="content">
             <p>Hello {{ $userName }},</p>
-            <p>We received a request to reset your password for your VoTrack account.</p>
+            <p>We received a request to reset your password for your VoTrace account.</p>
             
             <div style="text-align: center;">
                 <a href="{{ $resetUrl }}" class="button">Reset Password</a>
@@ -42,7 +42,7 @@
             </p>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} VoTrack. All rights reserved.
+            &copy; {{ date('Y') }} VoTrace. All rights reserved.
         </div>
     </div>
 </body>

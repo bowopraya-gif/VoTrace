@@ -13,11 +13,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>VoTrack Verification</h1>
+            <h1>VoTrace Verification</h1>
         </div>
         <div class="content">
             <p>Hello {{ $user->full_name }},</p>
-            <p>Thank you for registering with VoTrack. Please use the following One-Time Password (OTP) to verify your email address:</p>
+            <p>Thank you for registering with VoTrace. Please use the following One-Time Password (OTP) to verify your email address:</p>
             
             <div class="code">{{ $otp }}</div>
             
@@ -25,7 +25,7 @@
             <p>If you did not request this code, please ignore this email.</p>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} VoTrack. All rights reserved.
+            &copy; {{ date('Y') }} VoTrace. All rights reserved.
         </div>
     </div>
 </body>

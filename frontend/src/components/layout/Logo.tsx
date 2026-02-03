@@ -16,7 +16,7 @@ export default function Logo({ className = '', showText = true }: LogoProps) {
             </div>
             {showText && (
                 <span className="font-bold text-xl text-white tracking-tight">
-                    VoTrack
+                    VoTrace
                 </span>
             )}
         </Link>

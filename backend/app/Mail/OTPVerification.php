@@ -32,7 +32,7 @@ class OTPVerification extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your VoTrack Verification Code',
+            subject: 'Your VoTrace Verification Code',
         );
     }
 

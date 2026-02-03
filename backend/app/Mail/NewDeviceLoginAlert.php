@@ -27,7 +27,7 @@ class NewDeviceLoginAlert extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🔐 New Device Login Detected - VoTrack',
+            subject: '🔐 New Device Login Detected - VoTrace',
         );
     }
 

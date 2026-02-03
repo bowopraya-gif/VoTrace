@@ -21,7 +21,7 @@ class PasswordResetMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🔑 Reset Your Password - VoTrack',
+            subject: '🔑 Reset Your Password - VoTrace',
         );
     }
 
