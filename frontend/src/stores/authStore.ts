@@ -8,17 +8,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     isLoading: true, // Start loading to check auth on mount
 
     login: async (credentials) => {
-        // Get CSRF cookie first
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
-        await api.get('/sanctum/csrf-cookie', { baseURL: baseUrl });
-
-        // Login
+        // Token-based auth - no CSRF cookie needed for cross-domain
         try {
             const response = await api.post('/login', {
                 login: credentials.login,
                 password: credentials.password,
                 remember: credentials.remember || false,
             });
+
+            // Save token to localStorage for future requests
+            if (response.data.token && typeof window !== 'undefined') {
+                localStorage.setItem('auth_token', response.data.token);
+            }
+
             set({
                 user: response.data.user,
                 isAuthenticated: true,
@@ -34,9 +36,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     register: async (data) => {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
-        await api.get('/sanctum/csrf-cookie', { baseURL: baseUrl });
-        // Registration now sends OTP, does not return token immediately
+        // Token-based auth - no CSRF cookie needed
         const response = await api.post('/register', data);
         // Use user data if available, but they are not authenticated yet
         // Do not set isAuthenticated true.
@@ -46,6 +46,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     verifyEmail: async (data) => {
         // data = { email, otp }
         const response = await api.post('/verify-email', data);
+
+        // Save token to localStorage
+        if (response.data.token && typeof window !== 'undefined') {
+            localStorage.setItem('auth_token', response.data.token);
+        }
+
         set({
             user: response.data.user,
             isAuthenticated: true,

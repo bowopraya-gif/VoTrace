@@ -19,9 +19,17 @@ const getUserTimezone = (): string => {
     }
 };
 
-// Request interceptor to auto-append timezone to all requests
+// Request interceptor to auto-append timezone and auth token
 api.interceptors.request.use((config) => {
     const timezone = getUserTimezone();
+
+    // Add Authorization header if token exists
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    }
 
     // For GET requests, add to params
     if (config.method?.toLowerCase() === 'get') {
@@ -76,18 +84,10 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // Handle 419 CSRF Token Mismatch
+        // Handle 419 CSRF Token Mismatch - just reject, no retry needed for token-based auth
         if (status === 419) {
-            // Prevent infinite loop
-            if (error.config._retry) {
-                return Promise.reject(error);
-            }
-            error.config._retry = true;
-
-            // CSRF token mismatch, refresh cookie and retry
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
-            await axios.get(`${baseUrl}/sanctum/csrf-cookie`, { withCredentials: true });
-            return api.request(error.config);
+            console.warn('CSRF mismatch - this should not happen with token-based auth');
+            return Promise.reject(error);
         }
 
         return Promise.reject(error);

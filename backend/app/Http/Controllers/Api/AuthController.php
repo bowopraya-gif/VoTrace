@@ -88,8 +88,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // 3. Regenerate session (prevent session fixation)
-        $request->session()->regenerate();
+        // 3. (Session regeneration removed - using pure token-based auth for cross-domain)
 
         // 4. Create token with appropriate expiration
         // Remember me logic: 30 days vs 1 day
@@ -144,9 +143,7 @@ class AuthController extends Controller
         $user->verification_code_expires_at = null;
         $user->save();
 
-        // Auto login after verification
-        Auth::login($user);
-        $request->session()->regenerate();
+        // Auto-auth via token (no session for cross-domain)
         $token = $user->createToken('auth_token')->plainTextToken;
 
         // Log this login too
