@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Vocabulary;
 use App\Jobs\GenerateAudioJob;
+use App\Jobs\StreakUpdateJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
@@ -109,9 +110,10 @@ class VocabularyController extends Controller
                 }
             }
 
-            // Streak Update
+            // Streak Update (Async Job)
+            // Dispatch after response to make UI feel instant
             $timezone = $request->input('tz', 'UTC');
-            app(\App\Services\StreakService::class)->recordVocabularyAdded($request->user(), $timezone);
+            StreakUpdateJob::dispatchAfterResponse($request->user(), $timezone);
 
             // Dispatch audio generation job (async)
             GenerateAudioJob::dispatch($vocabulary);
@@ -164,12 +166,12 @@ class VocabularyController extends Controller
                 ]);
             }
 
-            // Streak Update (Non-blocking)
+            // Streak Update (Non-blocking background job)
             try {
                 $timezone = $request->input('tz', 'UTC');
-                $streakService->recordVocabularyAdded($request->user(), $timezone);
+                StreakUpdateJob::dispatchAfterResponse($request->user(), $timezone);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Streak update failed in quickAdd: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error("Streak job dispatch failed: " . $e->getMessage());
             }
 
             // Dispatch audio generation job (Non-blocking)
