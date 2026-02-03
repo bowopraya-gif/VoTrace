@@ -162,7 +162,7 @@ export default function LearningDashboard() {
                 </div>
             ) : modules.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {modules.map((module, i) => (
+                    {modules.map((module: any, i: number) => (
                         <div key={module.id} className="animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${i * 50}ms` }}>
                             <ModuleCard module={module} highlight={debouncedSearch} />
                         </div>

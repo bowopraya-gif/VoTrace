@@ -369,7 +369,7 @@ export default function PracticeSetup() {
                                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Part of Speech</label>
                                             </div>
                                             <div className="flex flex-wrap justify-center gap-2">
-                                                {filterOptions.parts_of_speech.map(pos => (
+                                                {filterOptions.parts_of_speech.map((pos: string) => (
                                                     <div key={pos} className="relative group/btn">
                                                         <button
                                                             onClick={() => toggleFilter('part_of_speech', pos)}

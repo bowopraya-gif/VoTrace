@@ -312,7 +312,7 @@ export default function LessonViewerPage() {
 
                 {/* Content Blocks */}
                 <div className="space-y-8">
-                    {blocks.map((block, index) => {
+                    {blocks.map((block: any, index: number) => {
                         const isCritical = index < 2;
                         return (
                             <div

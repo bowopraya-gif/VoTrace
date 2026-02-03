@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query'; // Import QueryClient
 import api from '@/lib/api';
@@ -11,11 +11,11 @@ import ListeningQuestion from '@/components/practice/ListeningQuestion';
 import QuestionFeedback from '@/components/practice/QuestionFeedback';
 import PracticeResult from '@/components/practice/PracticeResult';
 import { useAudioPreloader } from '@/hooks/useAudioPreloader';
-import { X, Clock, Play } from 'lucide-react';
+import { X, Clock, Play, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useStreakStore } from '@/stores/streakStore';
 
-export default function PracticeSessionPage() {
+function PracticeSessionContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const queryClient = useQueryClient(); // Initialize
@@ -514,5 +514,17 @@ export default function PracticeSessionPage() {
                 />
             )}
         </div>
+    );
+}
+
+export default function PracticeSessionPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="animate-spin text-primary h-12 w-12" />
+            </div>
+        }>
+            <PracticeSessionContent />
+        </Suspense>
     );
 }

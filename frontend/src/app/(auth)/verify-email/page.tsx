@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
 import api from '@/lib/api';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const emailParam = searchParams.get('email') || '';
@@ -138,3 +138,16 @@ export default function VerifyEmailPage() {
         </AuthLayout>
     );
 }
+
+export default function VerifyEmailPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        }>
+            <VerifyEmailContent />
+        </Suspense>
+    );
+}
+

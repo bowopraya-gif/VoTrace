@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock, CheckCircle2, XCircle } from 'lucide-react';
+import { Lock, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Button } from '@/components/ui/Button';
@@ -13,7 +13,7 @@ import { PasswordRequirements } from '@/components/auth/PasswordRequirements';
 
 type ValidationState = 'default' | 'success' | 'error';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
@@ -66,8 +66,6 @@ export default function ResetPasswordPage() {
             setIsLoading(false);
         }
     };
-
-
 
     return (
         <AuthLayout
@@ -125,5 +123,17 @@ export default function ResetPasswordPage() {
                 </Button>
             </form>
         </AuthLayout>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        }>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }

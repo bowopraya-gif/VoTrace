@@ -181,7 +181,7 @@ export default function VocabularyStatsSection({ stats, isLoading, period, timez
                                             return (
                                                 <div className="bg-slate-900/95 backdrop-blur-sm text-white text-xs p-3 rounded-xl shadow-xl border border-slate-800">
                                                     <div className="font-bold mb-2 text-slate-300">
-                                                        {new Date(label).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                                        {label ? new Date(label).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-2 h-2 rounded-full bg-[#0A56C8] shadow-[0_0_8px_rgba(10,86,200,0.6)]" />
@@ -204,7 +204,7 @@ export default function VocabularyStatsSection({ stats, isLoading, period, timez
                                     strokeWidth={3}
                                     fill="url(#masteredGradient)"
                                     dot={{ fill: '#0A56C8', strokeWidth: 2, r: 4, stroke: '#fff' }}
-                                    activeDot={{ r: 6, strokeWidth: 0, fill: '#0A56C8', stroke: '#fff', strokeWidth: 2 }}
+                                    activeDot={{ r: 6, fill: '#0A56C8', stroke: '#fff', strokeWidth: 2 }}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>

@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
 import PasswordChangeModal from '@/components/profile/PasswordChangeModal';
 import { useProfileForm } from '@/hooks/useProfileForm';
 import { useAuthStore } from '@/stores/authStore';
-import { Lock, Shield, Mail } from 'lucide-react';
+import { Lock, Shield, Mail, Loader2 } from 'lucide-react';
 
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function ProfilePage() {
+function ProfileContent() {
     const { user, fetchUser } = useAuthStore();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -150,5 +150,17 @@ export default function ProfilePage() {
                 onClose={() => setIsPasswordModalOpen(false)}
             />
         </div>
+    );
+}
+
+export default function ProfilePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            </div>
+        }>
+            <ProfileContent />
+        </Suspense>
     );
 }

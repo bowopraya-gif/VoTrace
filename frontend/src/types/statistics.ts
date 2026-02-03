@@ -74,6 +74,8 @@ export interface ImprovementWord {
     word: string;
     translation: string;
     times_wrong: number;
+    times_correct: number;
+    total_attempts: number;
     difficulty: number;
 }
 

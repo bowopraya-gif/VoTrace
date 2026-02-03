@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/Button';
 import { HighlightText } from '@/components/ui/HighlightText';
 
 import { Vocabulary } from '@/types/vocabulary';
-import { Pagination } from '@/types/pagination'; // Assuming this type exists or will define it
 import { Sort } from '@/stores/vocabularyStore'; // Keeping Sort type for now
 
 interface VocabularyTableProps {
