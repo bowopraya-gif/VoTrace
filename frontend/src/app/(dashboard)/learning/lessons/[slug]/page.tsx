@@ -165,8 +165,8 @@ export default function LessonViewerPage() {
 
         // 1. Interactive Blocks Handling (Quizzes, Vocab)
         const interactiveTypes = ['quiz_mc', 'quiz_typing', 'quiz_fill', 'vocabulary'];
-        const interactiveBlocks = blocks.filter(b => interactiveTypes.includes(b.type));
-        const completedInteractive = interactiveBlocks.filter(b => completedBlockIds.has(b.id)).length;
+        const interactiveBlocks = blocks.filter((b: any) => interactiveTypes.includes(b.type));
+        const completedInteractive = interactiveBlocks.filter((b: any) => completedBlockIds.has(b.id)).length;
 
         if (criteria?.min_interactive) {
             totalCount = criteria.min_interactive;
@@ -180,7 +180,7 @@ export default function LessonViewerPage() {
         }
         else {
             // Default Rule: All "Required" blocks
-            const requiredBlocks = blocks.filter(b => b.is_required);
+            const requiredBlocks = blocks.filter((b: any) => b.is_required);
 
             if (requiredBlocks.length === 0) {
                 // Fallback: All interactive blocks
@@ -192,7 +192,7 @@ export default function LessonViewerPage() {
                     met: canFinish
                 });
             } else {
-                const completedRequired = requiredBlocks.filter(b => completedBlockIds.has(b.id)).length;
+                const completedRequired = requiredBlocks.filter((b: any) => completedBlockIds.has(b.id)).length;
                 totalCount = requiredBlocks.length;
                 metCount = completedRequired;
                 canFinish = metCount >= totalCount;
