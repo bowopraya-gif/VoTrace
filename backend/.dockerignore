@@ -3,3 +3,16 @@ node_modules
 vendor
 .git
 .next
+.env
+.env.backup
+.env.local
+.phpunit.result.cache
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+tests
+phpunit.xml
+*.md
+.editorconfig
+.styleci.yml
