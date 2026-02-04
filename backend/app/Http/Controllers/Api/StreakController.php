@@ -12,7 +12,7 @@ class StreakController extends Controller
 {
     public function status(Request $request, StreakService $streakService)
     {
-        return response()->json($streakService->getStreakStatus($request->user()));
+        return response()->json($streakService->getStreakStatus($request->user(), $request->input('tz', 'UTC')));
     }
 
     public function calendar(Request $request)
@@ -32,7 +32,7 @@ class StreakController extends Controller
 
     public function stats(Request $request, StreakService $streakService)
     {
-        return response()->json($streakService->getDetailedStats($request->user()));
+        return response()->json($streakService->getDetailedStats($request->user(), $request->input('tz', 'UTC')));
     }
     
     public function history(Request $request, StreakService $streakService)

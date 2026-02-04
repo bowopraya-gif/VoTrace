@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UserStreak;
 use App\Models\StreakActivity;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class StreakService
