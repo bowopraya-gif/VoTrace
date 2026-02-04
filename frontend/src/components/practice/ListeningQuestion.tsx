@@ -68,7 +68,7 @@ function ListeningQuestion({
         }
     };
 
-    const feedbackTokens = feedback && !feedback.isCorrect
+    const feedbackTokens = feedback
         ? getVisualDiff(feedback.userAnswer, feedback.correctAnswer)
         : [];
 
@@ -154,10 +154,12 @@ function ListeningQuestion({
             {/* Input Area */}
             <div className="max-w-xl mx-auto space-y-4">
                 <div className="relative group">
-                    {feedback && !feedback.isCorrect ? (
+                    {feedback ? (
                         <div className={cn(
                             "w-full text-center text-2xl md:text-3xl font-bold p-6 rounded-2xl border-2 transition-all outline-none flex items-center justify-center gap-[1px] font-mono",
-                            "bg-red-50 border-red-500 text-red-700"
+                            feedback.isCorrect
+                                ? "bg-emerald-50 border-emerald-500 text-emerald-700"
+                                : "bg-red-50 border-red-500 text-red-700"
                         )}>
                             {feedbackTokens.map((token, idx) => (
                                 <span

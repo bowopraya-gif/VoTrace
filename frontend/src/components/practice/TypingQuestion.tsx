@@ -89,8 +89,9 @@ function TypingQuestion({
         const tokens = sentence.split(/(\b|\W+)/);
 
         // Target words to match (Correct Answer OR Question Text)
-        const target1 = question.correct_answer;
-        const target2 = question.question_text; // Fallback if 1st not found
+        // Fix: Split correct answer by delimiters to match ANY possible answer
+        const possibleAnswers = question.correct_answer.split(/[\/,|]/).map(s => s.trim());
+        const target2 = question.question_text;
 
         // We want to find the token that best matches our targets
         // Threshold for fuzzy match (0.6 allows for "decision" matching "decisions")
@@ -102,12 +103,12 @@ function TypingQuestion({
             // Skip non-word tokens
             if (!/\w+/.test(token)) return token;
 
-            // Check similarity
-            const sim1 = calculateSimilarity(token, target1);
+            // Check similarity against ANY possible correct answer
+            const isMatch1 = possibleAnswers.some(ans => calculateSimilarity(token, ans) >= THRESHOLD);
             const sim2 = calculateSimilarity(token, target2);
 
             // Prioritize matching correct_answer (what we type)
-            if (sim1 >= THRESHOLD) {
+            if (isMatch1) {
                 hasMasked = true;
                 return <span key={i} className="border-b-2 border-primary text-transparent px-2 select-none bg-primary/3 rounded min-w-[3rem] inline-block mx-1">____</span>;
             }
@@ -129,9 +130,11 @@ function TypingQuestion({
         if (!hasMasked) {
             const bestMatch = tokens.reduce((best, token, idx) => {
                 if (!/\w+/.test(token)) return best;
-                const sim1 = calculateSimilarity(token, target1);
+
+                // Find max similarity against ANY possible answer
+                const maxSim1 = Math.max(...possibleAnswers.map(ans => calculateSimilarity(token, ans)));
                 const sim2 = calculateSimilarity(token, target2);
-                const maxSim = Math.max(sim1, sim2);
+                const maxSim = Math.max(maxSim1, sim2);
 
                 if (maxSim > best.score && maxSim >= THRESHOLD) {
                     return { index: idx, score: maxSim };
@@ -164,7 +167,7 @@ function TypingQuestion({
     };
 
     // Unified Feedback
-    const feedbackTokens = feedback && !feedback.isCorrect
+    const feedbackTokens = feedback
         ? getVisualDiff(feedback.userAnswer, feedback.correctAnswer)
         : [];
 
@@ -200,13 +203,15 @@ function TypingQuestion({
                 <div className="relative group">
                     {/* 
                       Switch between Input and Rich Feedback Div
-                      If feedback exists (wrong answer), hide input and show feedback div that looks exactly like input.
+                      Always show feedback div after answer to visualize typos/matches
                     */}
 
-                    {feedback && !feedback.isCorrect ? (
+                    {feedback ? (
                         <div className={cn(
                             "w-full text-center text-2xl md:text-3xl font-bold p-6 rounded-2xl border-2 transition-all outline-none flex items-center justify-center gap-[1px] font-mono",
-                            "bg-red-50 border-red-500 text-red-700"
+                            feedback.isCorrect
+                                ? "bg-emerald-50 border-emerald-500 text-emerald-700"
+                                : "bg-red-50 border-red-500 text-red-700"
                         )}>
                             {feedbackTokens.map((token, idx) => (
                                 <span

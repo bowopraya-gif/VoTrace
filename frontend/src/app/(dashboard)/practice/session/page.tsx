@@ -11,7 +11,7 @@ import ListeningQuestion from '@/components/practice/ListeningQuestion';
 import QuestionFeedback from '@/components/practice/QuestionFeedback';
 import PracticeResult from '@/components/practice/PracticeResult';
 import { useAudioPreloader } from '@/hooks/useAudioPreloader';
-import { X, Clock, Play, Loader2 } from 'lucide-react';
+import { X, Clock, Play, Loader2, Target } from 'lucide-react';
 import Link from 'next/link';
 import { useStreakStore } from '@/stores/streakStore';
 
@@ -302,12 +302,7 @@ function PracticeSessionContent() {
         return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
-    const estRemaining = () => {
-        const remaining = sessionTotal - currentIndex;
-        if (currentIndex === 0) return remaining * 10;
-        const avgPerQ = sessionSeconds / currentIndex;
-        return Math.floor(avgPerQ * remaining);
-    };
+
 
     // Skip Handler
     const handleSkip = useCallback(() => {
@@ -441,10 +436,10 @@ function PracticeSessionContent() {
                     <div className="w-px h-4 bg-slate-200" />
                     <div className="flex items-center gap-2">
                         <div className="relative">
-                            <div className="absolute inset-0 bg-slate-400 blur-[2px] opacity-20" />
-                            <Clock size={10} />
+                            <div className="absolute inset-0 bg-amber-400 blur-[2px] opacity-20" />
+                            <Target size={10} className="text-amber-500" />
                         </div>
-                        <span>Est. Remaining: {formatTime(estRemaining())}</span>
+                        <span>Speed: {currentIndex > 0 ? Math.round(((questionStartTime - startTime) / 1000) / currentIndex) : 0}s/question</span>
                     </div>
                 </div>
 

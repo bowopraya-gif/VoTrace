@@ -73,8 +73,8 @@ export function validateAnswer(
     correctAnswer: string,
     tolerance: TypoTolerance
 ): { isCorrect: boolean; similarity: number; matchedAnswer: string } {
-    // Split by slash and trim each part
-    const possibleAnswers = correctAnswer.split('/').map(s => s.trim());
+    // Split by slash, comma, or pipe
+    const possibleAnswers = correctAnswer.split(/[\/,|]/).map(s => s.trim());
     const threshold = THRESHOLDS[tolerance];
 
     let bestMatch = {
