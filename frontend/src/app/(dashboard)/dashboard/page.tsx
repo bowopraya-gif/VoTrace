@@ -5,13 +5,18 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 
+import { useNavigationPrefetch } from '@/hooks/useNavigationPrefetch';
+
 export default function DashboardPage() {
     const router = useRouter();
     const { user, logout, isLoading, fetchUser } = useAuthStore();
+    const { prefetchAll } = useNavigationPrefetch();
 
     useEffect(() => {
         fetchUser();
-    }, [fetchUser]);
+        // Trigger smart pre-fetching when dashboard loads
+        prefetchAll();
+    }, [fetchUser, prefetchAll]);
 
     useEffect(() => {
         if (!isLoading && !user) {

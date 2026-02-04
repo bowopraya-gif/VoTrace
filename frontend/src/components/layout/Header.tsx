@@ -14,8 +14,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useNavigationPrefetch } from '@/hooks/useNavigationPrefetch';
+
 export default function Header() {
     const { user, logout } = useAuthStore();
+    const { prefetchPage } = useNavigationPrefetch();
     const [scrolled, setScrolled] = useState(false);
 
     // Add shadow on scroll
@@ -84,6 +87,7 @@ export default function Header() {
                             <NavLink
                                 key={link.href}
                                 {...link}
+                                onMouseEnter={() => prefetchPage(link.href)}
                             />
                         ))}
                     </nav>

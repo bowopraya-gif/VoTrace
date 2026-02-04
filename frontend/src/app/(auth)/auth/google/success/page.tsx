@@ -12,7 +12,7 @@ export default function GoogleSuccessPage() {
         // Fetch user data (session cookie is already set by backend)
         fetchUser().then(() => {
             // Redirect to dashboard after fetching user
-            router.push('/vocabulary');
+            router.push('/dashboard');
         }).catch(() => {
             // If fetch fails, redirect to login
             router.push('/login?error=google_auth_failed');

@@ -46,7 +46,7 @@ function VerifyEmailContent() {
             setStatus('success');
             setMessage('Your email has been verified successfully!');
             setTimeout(() => {
-                router.push('/vocabulary');
+                router.push('/dashboard');
             }, 2000);
         } catch (err: any) {
             setStatus('error');

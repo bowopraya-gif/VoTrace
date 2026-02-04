@@ -46,7 +46,7 @@ export default function LoginPage() {
 
         try {
             await login(formData);
-            router.push('/vocabulary');
+            router.push('/dashboard');
         } catch (err: any) {
             if (err.requires_verification) {
                 router.push(`/verify-email?email=${encodeURIComponent(err.email)}`);

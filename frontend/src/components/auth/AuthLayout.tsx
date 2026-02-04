@@ -8,7 +8,7 @@ export const AuthLayout = ({ children, title, subtitle }: { children: React.Reac
 
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
-            router.push('/vocabulary');
+            router.push('/dashboard');
         }
     }, [isAuthenticated, isLoading, router]);
 
