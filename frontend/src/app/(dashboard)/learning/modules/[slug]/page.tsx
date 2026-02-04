@@ -74,7 +74,7 @@ export default function ModuleDetailPage() {
             </Link>
 
             {/* Module Hero */}
-            <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-xl h-[400px] md:h-[450px]">
+            <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-xl h-[320px] md:h-[450px]">
                 {/* Background Image */}
                 <div className="absolute inset-0 z-0">
                     {module.thumbnail_url ? (
@@ -89,7 +89,8 @@ export default function ModuleDetailPage() {
                     ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent" />
+                    {/* Dark gradient for text readability (changed from primary/blue) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
                 </div>
 
                 <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row gap-8 items-end h-full">
