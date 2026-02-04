@@ -187,7 +187,6 @@ function ListeningQuestion({
                                 "w-full text-center text-2xl md:text-3xl font-bold p-6 rounded-2xl border-2 transition-all outline-none",
                                 "bg-white text-slate-800 placeholder:text-slate-300",
                                 !feedback && "border-slate-200 focus:border-primary focus:shadow-[0_0_0_4px_rgba(59,130,246,0.1)]",
-                                feedback?.isCorrect && "border-emerald-500 bg-emerald-50 text-emerald-700",
                                 disabled && "opacity-80"
                             )}
                             autoCapitalize="off"
