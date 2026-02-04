@@ -89,6 +89,7 @@ export const VocabularyFilters = ({
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 hidden md:block">Type</label>
                     <div className="relative group">
                         <select
+                            aria-label="Filter by Type"
                             className="w-full rounded-xl border border-slate-200 px-2 md:px-4 py-2.5 text-xs md:text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none appearance-none bg-white/50 transition-all shadow-sm group-hover:bg-white cursor-pointer font-medium text-slate-700 capitalize"
                             value={filters.pos}
                             onChange={handlePosChange}
@@ -107,6 +108,7 @@ export const VocabularyFilters = ({
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 hidden md:block">Smart Sort</label>
                     <div className="relative group">
                         <select
+                            aria-label="Sort vocabulary"
                             className="w-full rounded-xl border border-slate-200 px-2 md:px-4 py-2.5 text-xs md:text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none appearance-none bg-white/50 transition-all shadow-sm group-hover:bg-white cursor-pointer font-medium text-slate-700"
                             value={`${sortColumn}-${sortOrder}`}
                             onChange={(e) => {

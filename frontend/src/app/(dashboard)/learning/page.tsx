@@ -79,6 +79,7 @@ export default function LearningDashboard() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
                             <input
                                 type="text"
+                                aria-label="Search modules"
                                 placeholder="Search modules via title, description..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
@@ -91,6 +92,7 @@ export default function LearningDashboard() {
                         <div className="relative min-w-[220px] group">
                             <SlidersHorizontal className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
                             <select
+                                aria-label="Sort modules"
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value)}
                                 className="w-full pl-12 pr-10 py-3 rounded-xl border border-slate-200 shadow-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-white font-bold appearance-none cursor-pointer text-slate-700"
@@ -164,7 +166,7 @@ export default function LearningDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {modules.map((module: any, i: number) => (
                         <div key={module.id} className="animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${i * 50}ms` }}>
-                            <ModuleCard module={module} highlight={debouncedSearch} />
+                            <ModuleCard module={module} highlight={debouncedSearch} priority={i < 3} />
                         </div>
                     ))}
                 </div>

@@ -12,9 +12,10 @@ import { HighlightText } from '@/components/ui/HighlightText';
 interface ModuleCardProps {
     module: Module;
     highlight?: string;
+    priority?: boolean;
 }
 
-export default function ModuleCard({ module, highlight = '' }: ModuleCardProps) {
+export default function ModuleCard({ module, highlight = '', priority = false }: ModuleCardProps) {
     const isCompleted = (module.completed_lessons_count || 0) === module.lessons_count;
     const isStarted = (module.completed_lessons_count || 0) > 0;
     const queryClient = useQueryClient();
@@ -43,7 +44,7 @@ export default function ModuleCard({ module, highlight = '' }: ModuleCardProps) 
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
-                        priority={false}
+                        priority={priority}
                     />
                 ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
