@@ -83,87 +83,68 @@ function TypingQuestion({
         if (!question.example_sentence) return null;
 
         const sentence = question.example_sentence;
-
-        // Split sentence into tokens while preserving separators
         // Regex splits by word boundaries but keeps delimiters
         const tokens = sentence.split(/(\b|\W+)/);
-
-        // Target words to match (Correct Answer OR Question Text)
-        // Fix: Split correct answer by delimiters to match ANY possible answer
         const possibleAnswers = question.correct_answer.split(/[\/,|]/).map(s => s.trim());
         const target2 = question.question_text;
+        const THRESHOLD = 0.65; // Slightly higher threshold for combined phrases
 
-        // We want to find the token that best matches our targets
-        // Threshold for fuzzy match (0.6 allows for "decision" matching "decisions")
-        const THRESHOLD = 0.6;
+        const maskedIndices = new Set<number>();
 
-        let hasMasked = false;
+        // Sliding Window to find matches (Phrase Detection)
+        // We look ahead up to 10 tokens to find robust matches for phrases or split words
+        for (let i = 0; i < tokens.length; i++) {
+            // Optimization: if already masked, skip
+            if (maskedIndices.has(i)) continue;
 
-        const maskedTokens = tokens.map((token, i) => {
-            // Skip non-word tokens
-            if (!/\w+/.test(token)) return token;
+            // Try different window sizes
+            for (let len = 10; len >= 1; len--) {
+                if (i + len > tokens.length) continue;
 
-            // Check similarity against ANY possible correct answer
-            const isMatch1 = possibleAnswers.some(ans => calculateSimilarity(token, ans) >= THRESHOLD);
-            const sim2 = calculateSimilarity(token, target2);
+                const windowTokens = tokens.slice(i, i + len);
+                const windowText = windowTokens.join('');
 
-            // Prioritize matching correct_answer (what we type)
-            if (isMatch1) {
-                hasMasked = true;
-                return <span key={i} className="border-b-2 border-primary text-transparent px-2 select-none bg-primary/3 rounded min-w-[3rem] inline-block mx-1">____</span>;
-            }
+                // Skip if window is just whitespace/punctuation
+                if (!/[a-zA-Z0-9]/.test(windowText)) continue;
 
-            // If answer not found, check prompt (sim2) BUT only if we haven't masked anything yet?
-            // Actually, we want to mask the conceptually similar word.
-            // If we find the prompt word, we mask it too?
-            // User requirement: "Cari kata ... dan ganti dengan input box"
-            // Usually we only mask ONE word (the gap).
-            // Let's stick to masking priority 1 first. If no priority 1 found in WHOLE sentence, then try priority 2?
-            // Current map approach is greedy per token.
+                // Check against answers
+                const isMatch = possibleAnswers.some(ans => calculateSimilarity(windowText, ans) >= THRESHOLD);
 
-            return token;
-        });
+                // Also check against prompt question text (fallback)
+                const isPromptMatch = calculateSimilarity(windowText, target2) >= THRESHOLD;
 
-        // If simple map didn't mask anything (maybe because we want global best match?), try again with fallback target
-        // Or refined logic: Find BEST matching token index first.
-
-        if (!hasMasked) {
-            const bestMatch = tokens.reduce((best, token, idx) => {
-                if (!/\w+/.test(token)) return best;
-
-                // Find max similarity against ANY possible answer
-                const maxSim1 = Math.max(...possibleAnswers.map(ans => calculateSimilarity(token, ans)));
-                const sim2 = calculateSimilarity(token, target2);
-                const maxSim = Math.max(maxSim1, sim2);
-
-                if (maxSim > best.score && maxSim >= THRESHOLD) {
-                    return { index: idx, score: maxSim };
+                if (isMatch || isPromptMatch) {
+                    // Mark all tokens in this window as masked
+                    for (let k = 0; k < len; k++) {
+                        maskedIndices.add(i + k);
+                    }
+                    // Skip the outer loop index
+                    // i will be incremented by loop, so we add len - 1
+                    // Actually, simpler to just let the outer loop continue and hit the "if has" check
+                    break; // Found largest match for this start position
                 }
-                return best;
-            }, { index: -1, score: 0 });
-
-            if (bestMatch.index !== -1) {
-                return (
-                    <p className="text-xl md:text-2xl text-slate-700 leading-relaxed italic">
-                        "{tokens.map((token, i) =>
-                            i === bestMatch.index
-                                ? <span key={i} className="border-b-2 border-primary text-transparent px-2 select-none bg-primary/5 rounded min-w-[3rem] inline-block mx-1">____</span>
-                                : token
-                        )}"
-                    </p>
-                );
             }
-        } else {
-            // Render the greedy masked version
-            return (
-                <p className="text-xl md:text-2xl text-slate-700 leading-relaxed italic">
-                    "{maskedTokens}"
-                </p>
-            );
         }
 
-        // Fallback
-        return <p className="text-xl md:text-2xl text-slate-700 italic">"{sentence}"</p>;
+        // If no matches found, fallback to rendering sentence as is
+        if (maskedIndices.size === 0) {
+            return <p className="text-xl md:text-2xl text-slate-700 italic">"{sentence}"</p>;
+        }
+
+        return (
+            <p className="text-xl md:text-2xl text-slate-700 leading-relaxed italic">
+                "{tokens.map((token, i) => {
+                    if (maskedIndices.has(i)) {
+                        // Only render one placeholder for the start of a masked group
+                        if (i === 0 || !maskedIndices.has(i - 1)) {
+                            return <span key={i} className="border-b-2 border-primary text-transparent px-2 select-none bg-primary/5 rounded min-w-[3rem] inline-block mx-1">____</span>;
+                        }
+                        return null; // Don't render subsequent masked tokens
+                    }
+                    return <span key={i}>{token}</span>;
+                })}"
+            </p>
+        );
     };
 
     // Unified Feedback
