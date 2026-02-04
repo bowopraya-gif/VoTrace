@@ -27,11 +27,21 @@ export default function StreakWidget() {
         }
     }, [status?.current_streak, prevStreak]);
 
-    if (!mounted || isLoading || !status) return null;
+    if (!mounted) return null;
+
+    // Use status from store, or fallback to zero-state if loading/error (prevent disappearance)
+    const effectiveStatus = status || {
+        current_streak: 0,
+        longest_streak: 0,
+        added_today: false,
+        is_active: false,
+        last_activity_date: null,
+        total_active_days: 0
+    };
 
     // Logic Translation from Script
-    const currentStreak = status.current_streak;
-    const studiedToday = status.added_today;
+    const currentStreak = effectiveStatus.current_streak;
+    const studiedToday = effectiveStatus.added_today;
 
     // Determine Logic State based on user script
     let state: 'no_streak' | 'active' | 'frozen_active' = 'no_streak';
@@ -138,7 +148,7 @@ export default function StreakWidget() {
                             </div>
                             <div className="streak-stat-item">
                                 <div className="streak-stat-value" style={{ color: '#1f2937' }}>
-                                    {status.longest_streak}
+                                    {effectiveStatus.longest_streak}
                                 </div>
                                 <div className="streak-stat-label">Longest</div>
                             </div>

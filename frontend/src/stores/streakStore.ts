@@ -12,6 +12,15 @@ interface StreakState {
     incrementOptimistically: () => void;
 }
 
+const DEFAULT_STREAK_STATUS: StreakStatus = {
+    current_streak: 0,
+    longest_streak: 0,
+    added_today: false,
+    is_active: false,
+    last_activity_date: null,
+    total_active_days: 0
+};
+
 export const useStreakStore = create<StreakState>()(
     persist(
         (set, get) => ({
@@ -31,7 +40,12 @@ export const useStreakStore = create<StreakState>()(
                     set({ status: res.data, isLoading: false });
                 } catch (error) {
                     console.error('Failed to fetch streak status', error);
-                    set({ isLoading: false });
+                    // On error, use existing status OR default empty status
+                    // This ensures UI never disappears
+                    set({
+                        status: get().status || DEFAULT_STREAK_STATUS,
+                        isLoading: false
+                    });
                 }
             },
 
