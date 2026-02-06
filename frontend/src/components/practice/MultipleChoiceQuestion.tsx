@@ -63,16 +63,16 @@ function MultipleChoiceQuestion({
     };
 
     return (
-        <div className="w-full space-y-8 animate-in fade-in slide-in-from-right-8 duration-300">
+        <div className="w-full space-y-4 md:space-y-8 animate-in fade-in slide-in-from-right-8 duration-300">
             {/* Question Card */}
             <div className="bg-white rounded-[1.5rem] shadow-sm border border-slate-200 overflow-hidden relative p-8 md:p-12 text-center">
-                <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4 leading-tight">
+                <h2 className="text-2xl md:text-4xl font-bold text-slate-800 mb-2 md:mb-4 leading-tight">
                     {question.question_text}
                 </h2>
             </div>
 
             {/* Options Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
                 {question.options.map((option, index) => {
                     const isSelected = selectedOption === option;
 
@@ -96,7 +96,7 @@ function MultipleChoiceQuestion({
                             onClick={() => handleOptionClick(option)}
                             disabled={disabled}
                             className={cn(
-                                "group relative flex md:flex-row items-center p-4 rounded-xl border-2 text-left transition-all duration-200 outline-none h-full",
+                                "group relative flex flex-col items-center p-4 rounded-xl border-2 text-center transition-all duration-200 outline-none h-full min-h-[120px] justify-between",
                                 // Base styles
                                 "bg-white shadow-sm hover:shadow-md",
                                 // Status specific styles
@@ -110,7 +110,7 @@ function MultipleChoiceQuestion({
                         >
                             {/* Label Box (A, B, C...) */}
                             <div className={cn(
-                                "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold mr-3 transition-colors",
+                                "flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-xs md:text-sm font-bold mb-3 transition-colors",
                                 status === 'neutral' && "bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary",
                                 status === 'correct' && "bg-emerald-200 text-emerald-700",
                                 status === 'wrong' && "bg-red-200 text-red-700",
@@ -121,7 +121,7 @@ function MultipleChoiceQuestion({
 
                             {/* Option Text */}
                             <span className={cn(
-                                "flex-grow text-sm md:text-base font-medium break-words leading-tight",
+                                "w-full text-sm md:text-base font-medium break-words leading-tight",
                                 status === 'neutral' && "text-slate-700",
                                 status === 'correct' && "text-emerald-800",
                                 status === 'wrong' && "text-red-800",
@@ -130,14 +130,14 @@ function MultipleChoiceQuestion({
                                 {option}
                             </span>
 
-                            {/* Icons are tricky in narrow columns, keep it simple for now or overlay */}
+                            {/* Icons positioned absolutely */}
                             {status === 'correct' && (
-                                <div className="absolute top-2 right-2 md:static md:ml-auto">
+                                <div className="absolute top-4 right-4">
                                     <Check className="w-5 h-5 text-emerald-600 animate-in zoom-in duration-300" />
                                 </div>
                             )}
                             {status === 'wrong' && (
-                                <div className="absolute top-2 right-2 md:static md:ml-auto">
+                                <div className="absolute top-4 right-4">
                                     <X className="w-5 h-5 text-red-600 animate-in zoom-in duration-300" />
                                 </div>
                             )}

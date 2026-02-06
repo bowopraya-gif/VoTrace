@@ -29,18 +29,15 @@ export default function QuizMCBlock({ block, isCompleted = false, onComplete }: 
     };
 
     return (
-        <div className="my-8 bg-indigo-50/50 border border-indigo-100 rounded-3xl p-6 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
-            <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg uppercase tracking-wider mb-4">
-                Quiz
-            </span>
 
+        <div className="my-4 md:my-6 bg-white border border-slate-200 rounded-3xl p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500 shadow-sm">
             <h3 className="text-xl font-bold text-slate-800 mb-6 leading-relaxed">
                 {question}
             </h3>
 
             <div className="space-y-3">
                 {options.map((opt: string, idx: number) => {
-                    let statusClass = "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-sm";
+                    let statusClass = "bg-white border-slate-200 hover:border-primary/50 hover:shadow-sm";
 
                     if (submitted) {
                         if (idx === correct_index) {
@@ -51,7 +48,7 @@ export default function QuizMCBlock({ block, isCompleted = false, onComplete }: 
                             statusClass = "opacity-50";
                         }
                     } else if (selected === idx) {
-                        statusClass = "bg-indigo-50 border-indigo-500 text-indigo-700 shadow-md ring-1 ring-indigo-500";
+                        statusClass = "bg-primary/10 border-primary text-primary shadow-md ring-1 ring-primary";
                     }
 
                     return (
@@ -60,7 +57,7 @@ export default function QuizMCBlock({ block, isCompleted = false, onComplete }: 
                             onClick={() => handleSelect(idx)}
                             disabled={submitted}
                             className={cn(
-                                "w-full text-left p-4 rounded-xl border-2 font-bold transition-all duration-200 flex items-center justify-between group",
+                                "w-full text-left p-3 md:p-4 rounded-xl border-2 font-medium md:font-bold text-sm md:text-base transition-all duration-200 flex items-center justify-between group",
                                 statusClass
                             )}
                         >
@@ -73,11 +70,11 @@ export default function QuizMCBlock({ block, isCompleted = false, onComplete }: 
             </div>
 
             {!submitted && (
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-center">
                     <button
                         onClick={handleSubmit}
                         disabled={selected === null}
-                        className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:shadow-none"
+                        className="w-full sm:w-auto px-12 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none"
                     >
                         Check Answer
                     </button>
@@ -85,11 +82,12 @@ export default function QuizMCBlock({ block, isCompleted = false, onComplete }: 
             )}
 
             {submitted && explanation && (
-                <div className="mt-6 p-4 bg-white rounded-xl border border-indigo-100 text-indigo-800 text-sm animate-in fade-in slide-in-from-top-2">
-                    <span className="font-bold uppercase tracking-wider text-xs block mb-1 text-indigo-400">Explanation</span>
+                <div className="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/10 text-slate-700 text-sm animate-in fade-in slide-in-from-top-2">
+                    <span className="font-bold uppercase tracking-wider text-xs block mb-1 text-primary">Explanation</span>
                     {explanation}
                 </div>
             )}
         </div>
     );
+
 }

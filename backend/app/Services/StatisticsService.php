@@ -839,9 +839,9 @@ class StatisticsService
         
         // Get all lesson progress for this week
         $progress = LessonProgress::where('user_id', $user->id)
-            ->whereBetween('started_at', [$weekStart, $weekEnd])
+            ->whereBetween('updated_at', [$weekStart, $weekEnd])
             ->get()
-            ->groupBy(fn($p) => Carbon::parse($p->started_at)->toDateString());
+            ->groupBy(fn($p) => $p->updated_at->toDateString());
         
         // Build activity array for each day of the week
         $activity = [];

@@ -23,9 +23,14 @@ interface LearningStatsSectionProps {
 
 const cardStyle = "bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300";
 
+import { useMobileTooltip } from '@/hooks/useMobileTooltip'; // Add import
+
 export default function LearningStatsSection({ stats, isLoading, period, timezone }: LearningStatsSectionProps) {
     const router = useRouter();
     // Internal state removed - data controlled by parent
+
+    // --- Mobile Tooltip Hook ---
+    const { handleTap, TooltipComponent } = useMobileTooltip();
 
     if (isLoading || !stats) {
         return (
@@ -60,6 +65,7 @@ export default function LearningStatsSection({ stats, isLoading, period, timezon
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+            <TooltipComponent /> {/* Portal Tooltip */}
             {/* Overview Stats Row */}
             <div className="lg:col-span-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard label="Modules" value={stats.overview.modules_started} icon={BookOpen} color="text-blue-500" bg="bg-blue-50" />
@@ -270,26 +276,118 @@ export default function LearningStatsSection({ stats, isLoading, period, timezon
                 transition={{ delay: 0.3 }}
                 className={`${cardStyle} lg:col-span-4 overflow-hidden`}
             >
-                <div className="flex justify-between items-start mb-4">
-                    <div>
-                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Activity Heatmap</h3>
-                        <p className="text-sm text-slate-500">Learning consistency</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 font-medium pt-1">
-                        <span>Less</span>
-                        <div className="flex gap-1">
-                            <div className="w-3 h-3 rounded-[2px] bg-slate-100"></div>
-                            <div className="w-3 h-3 rounded-[2px] bg-blue-200"></div>
-                            <div className="w-3 h-3 rounded-[2px] bg-blue-300"></div>
-                            <div className="w-3 h-3 rounded-[2px] bg-blue-400"></div>
-                            <div className="w-3 h-3 rounded-[2px] bg-blue-500"></div>
-                            <div className="w-3 h-3 rounded-[2px] bg-blue-600"></div>
+                {/* MOBILE VERSION (High-Fidelity, Consistent Design) */}
+                <div className="lg:hidden">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Activity Heatmap</h3>
+                            <p className="text-sm text-slate-500">Learning consistency</p>
                         </div>
-                        <span>More</span>
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                            <span>Less</span>
+                            <div className="w-2.5 h-2.5 bg-slate-100 rounded-[2px]" />
+                            <div className="w-2.5 h-2.5 bg-[#93c5fd] rounded-[2px]" />
+                            <div className="w-2.5 h-2.5 bg-[#3b82f6] rounded-[2px]" />
+                            <div className="w-2.5 h-2.5 bg-[#1e3a8a] rounded-[2px]" />
+                            <span>More</span>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                        <div className="min-w-[600px]">
+                            {/* Days Header */}
+                            <div className="flex gap-1 mb-2 pl-12">
+                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                    <div key={day} className="flex-1 text-[9px] text-slate-300 font-medium text-center">
+                                        {day}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Month Rows */}
+                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, monthIdx) => {
+                                const daysInMonth = new Date(new Date().getFullYear(), monthIdx + 1, 0).getDate();
+                                return (
+                                    <div key={month} className="flex items-center gap-1 mb-2">
+                                        <div className="w-10 text-[11px] font-bold text-slate-700 shrink-0">
+                                            {month}
+                                        </div>
+                                        {Array.from({ length: 31 }, (_, dayIdx) => {
+                                            const day = dayIdx + 1;
+                                            const isValidDay = day <= daysInMonth;
+                                            const year = new Date().getFullYear();
+                                            const dateString = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                                            // Learning stats uses 'minutes'
+                                            const dayData = stats.activity_heatmap?.find((d: any) => d.date === dateString);
+                                            const minutes = dayData?.minutes || 0;
+                                            const count = dayData?.count || 0;
+
+                                            let colorClass = 'bg-slate-100';
+                                            if (minutes > 0) {
+                                                if (minutes >= 60) colorClass = 'bg-[#1e3a8a]';
+                                                else if (minutes >= 30) colorClass = 'bg-[#2563eb]';
+                                                else if (minutes >= 15) colorClass = 'bg-[#60a5fa]';
+                                                else colorClass = 'bg-[#dbeafe]';
+                                            }
+
+                                            // Tooltip Content
+                                            const tooltipContent = (
+                                                <div className="text-center">
+                                                    <div className="font-bold mb-1 text-blue-200">
+                                                        {month} {day}, {year}
+                                                    </div>
+                                                    <div className="space-y-0.5">
+                                                        <div className="text-white font-black text-lg">
+                                                            {minutes} <span className="text-xs font-normal text-slate-400">min</span>
+                                                        </div>
+                                                        {count > 0 && (
+                                                            <div className="text-xs text-slate-400 font-medium">
+                                                                {count} sessions
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+
+                                            return (
+                                                <div
+                                                    key={dayIdx}
+                                                    onClick={(e) => isValidDay && handleTap(e, tooltipContent)}
+                                                    className={`flex-1 aspect-square rounded-[3px] ${isValidDay ? colorClass : 'bg-transparent'} ${isValidDay ? 'active:scale-90 transition-transform cursor-pointer' : ''}`}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
-                <div className="overflow-x-auto pb-2 custom-scrollbar">
-                    <YearlyHeatmap data={stats.activity_heatmap} year={new Date().getFullYear()} />
+
+                {/* DESKTOP VERSION (Original) */}
+                <div className="hidden lg:block">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Activity Heatmap</h3>
+                            <p className="text-sm text-slate-500">Learning consistency</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-400 font-medium pt-1">
+                            <span>Less</span>
+                            <div className="flex gap-1">
+                                <div className="w-3 h-3 rounded-[2px] bg-slate-100"></div>
+                                <div className="w-3 h-3 rounded-[2px] bg-blue-200"></div>
+                                <div className="w-3 h-3 rounded-[2px] bg-blue-300"></div>
+                                <div className="w-3 h-3 rounded-[2px] bg-blue-400"></div>
+                                <div className="w-3 h-3 rounded-[2px] bg-blue-500"></div>
+                                <div className="w-3 h-3 rounded-[2px] bg-blue-600"></div>
+                            </div>
+                            <span>More</span>
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto pb-2 custom-scrollbar">
+                        <YearlyHeatmap data={stats.activity_heatmap} year={new Date().getFullYear()} />
+                    </div>
                 </div>
             </motion.div>
 

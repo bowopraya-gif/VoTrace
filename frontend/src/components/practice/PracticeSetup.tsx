@@ -519,9 +519,9 @@ export default function PracticeSetup() {
                     <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
                         <div className="bg-white text-slate-800 p-8 rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
 
+                            <h2 className="text-2xl font-bold mb-8 text-slate-900 text-center relative z-10">Session Summary</h2>
                             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                                 <div>
-                                    <h2 className="text-2xl font-bold mb-6 text-slate-900">Session Summary</h2>
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center">
@@ -544,9 +544,9 @@ export default function PracticeSetup() {
                                     </div>
 
                                     {/* Detailed Filters Summary */}
-                                    <div className="mt-8 pt-6 border-t border-slate-100">
+                                    <div className="mt-8 pt-6 border-t border-slate-100 text-center">
                                         <div className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-3">Active Filters</div>
-                                        <div className="flex flex-wrap gap-2">
+                                        <div className="flex flex-wrap gap-2 justify-center">
                                             {filters.learning_status.map(s => (
                                                 <span key={s} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg capitalize">
                                                     {s}
@@ -582,7 +582,7 @@ export default function PracticeSetup() {
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-12">
+                                <div className="flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-12 items-center text-center">
                                     <div>
                                         <div className="text-sm text-slate-400 font-bold mb-2">Total Questions</div>
                                         <div className="text-6xl font-black text-primary mb-4">{questionCount}</div>

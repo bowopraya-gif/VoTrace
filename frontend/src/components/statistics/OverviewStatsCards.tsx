@@ -51,7 +51,7 @@ const CARDS_CONFIG = [
 export default function OverviewStatsCards({ overview, loading }: OverviewStatsCardsProps) {
     if (loading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                 {[...Array(4)].map((_, i) => (
                     <div key={i} className="h-40 rounded-3xl bg-white shadow-sm border border-slate-100 animate-pulse" />
                 ))}
@@ -62,10 +62,18 @@ export default function OverviewStatsCards({ overview, loading }: OverviewStatsC
     return (
         <div className="space-y-6">
             {/* Bento Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {CARDS_CONFIG.map((card, index) => {
                     const Icon = card.icon;
                     const value = overview?.[card.key as keyof StatsOverview] as number ?? 0;
+
+                    // Construct color classes dynamically based on the card.color config
+                    // card.color is like "text-violet-600"
+                    // We need to extract the color name to form bg-violet-50 etc if strict match needed, 
+                    // but here we can rely on group-hover logic or just hardcode the light bg in config if we rename keys.
+                    // Actually, the new design uses `bg-primary/10 text-primary` usually. 
+                    // But here we want distinct colors.
+                    // Let's stick to the card.bg and card.color from config but apply them to the new structure.
 
                     return (
                         <motion.div
@@ -73,38 +81,37 @@ export default function OverviewStatsCards({ overview, loading }: OverviewStatsC
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
-                            whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                            className={`
-                                overflow-hidden rounded-3xl p-6
-                                bg-white
-                                border border-slate-100/50
-                                shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]
-                                transition-all duration-300
-                                group flex flex-col justify-between
-                                h-44
-                            `}
+                            className="relative overflow-hidden rounded-2xl p-6 border border-slate-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-white group"
                         >
-                            <div className="flex justify-between items-start">
-                                <span className="text-sm font-semibold text-slate-400 tracking-wide uppercase">
-                                    {card.label}
-                                </span>
-                                <div className={`p-3 rounded-2xl ${card.bg} ${card.color} transition-transform group-hover:scale-110 group-hover:rotate-3`}>
-                                    <Icon size={22} strokeWidth={2.5} />
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-2 rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white group-hover:shadow-sm duration-300">
+                                        <Icon size={20} className="transition-transform" />
+                                    </div>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                        {card.label}
+                                    </h3>
                                 </div>
-                            </div>
 
-                            <div>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-extrabold tracking-tight text-slate-900 group-hover:text-slate-800 transition-colors">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight tabular-nums">
                                         <AnimatedCounter value={value} />
                                     </span>
                                     {card.suffix && (
-                                        <span className="text-lg font-semibold text-slate-400">
+                                        <span className="text-sm font-bold text-slate-400 hidden sm:inline-block">
                                             {card.suffix}
                                         </span>
                                     )}
                                 </div>
                             </div>
+
+                            {/* Decorative Background Icon */}
+                            <div className="absolute -right-6 -bottom-6 opacity-[0.05] transition-transform duration-500 group-hover:scale-125 group-hover:-rotate-12 text-primary">
+                                <Icon size={120} />
+                            </div>
+
+                            {/* Gradient Glow */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         </motion.div>
                     );
                 })}

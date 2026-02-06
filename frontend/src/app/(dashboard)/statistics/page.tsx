@@ -14,10 +14,10 @@ import LearningStatsSection from '@/components/statistics/learning/LearningStats
 
 type TabType = 'vocabulary' | 'practice' | 'learning';
 
-const TABS: { value: TabType; label: string; emoji: string }[] = [
-    { value: 'vocabulary', label: 'Vocabulary', emoji: '📚' },
-    { value: 'practice', label: 'Practice', emoji: '🎯' },
-    { value: 'learning', label: 'Learning', emoji: '📖' },
+const TABS: { value: TabType; label: string }[] = [
+    { value: 'vocabulary', label: 'Vocabulary' },
+    { value: 'practice', label: 'Practice' },
+    { value: 'learning', label: 'Learning' },
 ];
 
 export default function StatisticsPage() {
@@ -62,15 +62,15 @@ export default function StatisticsPage() {
     });
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-10 space-y-10 animate-in fade-in zoom-in-95 duration-700">
+        <div className="max-w-7xl mx-auto min-h-screen bg-[#F8FAFC] py-6 md:p-6 lg:p-10 space-y-6 md:space-y-10 animate-in fade-in zoom-in-95 duration-700">
             {/* Header Section */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-                <div className="space-y-2">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 md:gap-6">
+                <div className="space-y-1 md:space-y-2">
                     <motion.h1
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1, duration: 0.5 }}
-                        className="text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight"
+                        className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight"
                     >
                         {title}
                     </motion.h1>
@@ -78,7 +78,7 @@ export default function StatisticsPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2, duration: 0.5 }}
-                        className="text-lg text-slate-500 max-w-xl"
+                        className="text-sm md:text-lg text-slate-500 max-w-xl"
                     >
                     </motion.p>
                 </div>
@@ -101,8 +101,9 @@ export default function StatisticsPage() {
             {/* Tabs & Content */}
             <div className="space-y-6">
                 {/* Modern Pill Tabs */}
+                {/* Modern Pill Tabs */}
                 <div className="flex justify-center md:justify-start">
-                    <div className="inline-flex bg-white p-1.5 rounded-2xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.04)]">
+                    <div className="flex w-full md:w-auto md:inline-flex bg-white p-1 rounded-2xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.04)]">
                         {TABS.map((tab) => {
                             const isActive = activeTab === tab.value;
                             return (
@@ -110,7 +111,7 @@ export default function StatisticsPage() {
                                     key={tab.value}
                                     onClick={() => setActiveTab(tab.value)}
                                     className={`
-                                        relative px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300
+                                        relative flex-1 md:flex-none px-3 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-sm font-bold transition-all duration-300
                                         ${isActive ? 'text-white shadow-lg shadow-blue-500/30' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}
                                     `}
                                 >
@@ -121,8 +122,7 @@ export default function StatisticsPage() {
                                             transition={{ type: "spring", bounce: 0.15, duration: 0.6 }}
                                         />
                                     )}
-                                    <span className="relative z-10 flex items-center gap-2">
-                                        <span>{tab.emoji}</span>
+                                    <span className="relative z-10 flex items-center justify-center gap-1.5 md:gap-2">
                                         <span>{tab.label}</span>
                                     </span>
                                 </button>

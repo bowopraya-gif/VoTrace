@@ -70,18 +70,18 @@ export default function QuestionFeedback({
                 </div>
             )}
 
-            <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-full ${isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                        {isCorrect ? <CheckCircle size={32} /> : <XCircle size={32} />}
+            <div className="max-w-4xl mx-auto flex flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 md:gap-4 flex-1">
+                    <div className={`p-2 md:p-3 rounded-full flex-shrink-0 ${isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                        {isCorrect ? <CheckCircle className="w-6 h-6 md:w-8 md:h-8" /> : <XCircle className="w-6 h-6 md:w-8 md:h-8" />}
                     </div>
                     <div>
-                        <h3 className={`text-xl font-bold ${isCorrect ? 'text-emerald-800' : 'text-red-800'}`}>
+                        <h3 className={`text-lg md:text-xl font-bold ${isCorrect ? 'text-emerald-800' : 'text-red-800'}`}>
                             {isCorrect ? 'Correct!' : 'Incorrect'}
                         </h3>
                         {!isCorrect && (
-                            <p className="text-red-600 font-medium mt-1">
-                                Correct answer: <span className="font-bold">{correctAnswer}</span>
+                            <p className="text-red-600 text-sm md:text-base font-medium mt-0.5 md:mt-1 pr-2 leading-tight">
+                                Correct: <span className="font-bold">{correctAnswer}</span>
                             </p>
                         )}
                     </div>
@@ -91,15 +91,16 @@ export default function QuestionFeedback({
                     ref={nextButtonRef}
                     onClick={onNext}
                     className={`
-                        px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 flex items-center gap-2
+                        flex-shrink-0 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 flex items-center gap-2
                         ${isCorrect
                             ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
                             : 'bg-red-600 hover:bg-red-700 shadow-red-200'}
                     `}
                 >
-                    {secondsRemaining !== undefined && secondsRemaining > 0
-                        ? `Continue (${secondsRemaining}s)`
-                        : 'Continue'}
+                    <span className="hidden md:inline">Continue</span>
+                    {secondsRemaining !== undefined && secondsRemaining > 0 && (
+                        <span>({secondsRemaining}s)</span>
+                    )}
                     <ArrowRight size={20} />
                 </button>
             </div>

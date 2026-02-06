@@ -23,8 +23,8 @@ export default function EnglishLevelProgress({ currentLevel, onChange, readOnly 
     const safeIndex = currentIndex === -1 ? 0 : currentIndex;
 
     return (
-        <div className="w-full py-6 select-none relative z-0">
-            <div className="relative flex items-center justify-between w-full h-[60px]">
+        <div className="w-full py-0 select-none relative z-0">
+            <div className="relative flex items-center justify-between w-full h-12 md:h-[60px]">
                 {/* Background Line - Darker and wider z-index fix */}
                 <div className="absolute left-0 right-0 h-2 bg-slate-200 top-1/2 -translate-y-1/2 -z-10 rounded-full" />
 
@@ -47,11 +47,11 @@ export default function EnglishLevelProgress({ currentLevel, onChange, readOnly 
                                 onClick={() => !readOnly && onChange?.(level.id)}
                                 disabled={readOnly}
                                 className={cn(
-                                    "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-300 relative z-10 border-2",
+                                    "w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center font-bold text-[10px] md:text-sm transition-all duration-300 relative z-10 border-2",
                                     isActive
                                         ? `border-transparent text-white shadow-lg ${level.color}`
                                         : "bg-white border-slate-300 text-slate-400 hover:border-slate-400",
-                                    isCurrent && `scale-110 ring-4 ring-offset-2 ${level.ring}`,
+                                    isCurrent && `scale-110 ring-2 md:ring-4 ring-offset-1 md:ring-offset-2 ${level.ring}`,
                                     !readOnly && !isActive && "hover:scale-105 cursor-pointer",
                                     !readOnly && isActive && "cursor-pointer",
                                     readOnly && "cursor-default"

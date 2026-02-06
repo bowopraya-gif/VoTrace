@@ -73,9 +73,6 @@ export default function PasswordChangeModal({ isOpen, onClose }: PasswordChangeM
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <Lock size={20} className="text-primary" />
-                        </div>
                         <h3 className="font-bold text-slate-800">Change Password</h3>
                     </div>
                     <button

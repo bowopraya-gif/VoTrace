@@ -39,19 +39,13 @@ export default function QuizTypingBlock({ block, isCompleted = false, onComplete
     };
 
     return (
-        <div className="my-8 bg-sky-50/50 border border-sky-100 rounded-3xl p-6 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
-            <span className="inline-block px-3 py-1 bg-sky-100 text-sky-700 text-xs font-bold rounded-lg uppercase tracking-wider mb-4">
-                Typing Quiz
-            </span>
 
+        <div className="my-6 bg-white border border-slate-200 rounded-3xl p-6 md:p-8 animate-in slide-in-from-bottom-4 duration-500 shadow-sm">
             <h3 className="text-xl font-bold text-slate-800 mb-6 leading-relaxed">
                 {question}
             </h3>
 
             <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <Keyboard size={20} />
-                </div>
                 <input
                     type="text"
                     value={input}
@@ -60,12 +54,12 @@ export default function QuizTypingBlock({ block, isCompleted = false, onComplete
                     disabled={submitted}
                     placeholder="Type your answer here..."
                     className={cn(
-                        "w-full pl-12 pr-4 py-4 rounded-xl border-2 font-medium text-lg outline-none transition-all shadow-sm",
+                        "w-full px-4 py-3 md:py-4 rounded-xl border-2 font-medium text-base md:text-lg outline-none transition-all shadow-sm",
                         submitted
                             ? isCorrect
                                 ? "bg-emerald-50 border-emerald-500 text-emerald-800"
                                 : "bg-red-50 border-red-500 text-red-800"
-                            : "bg-white border-slate-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 placeholder:text-slate-400"
+                            : "bg-white border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 placeholder:text-slate-400"
                     )}
                 />
 
@@ -81,9 +75,9 @@ export default function QuizTypingBlock({ block, isCompleted = false, onComplete
             </div>
 
             {!submitted ? (
-                <div className="mt-6 flex justify-between items-center">
+                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                     {hint ? (
-                        <p className="text-sm text-slate-500 italic">
+                        <p className="text-sm text-slate-500 italic w-full sm:w-auto">
                             Hint: {hint}
                         </p>
                     ) : <div />}
@@ -91,7 +85,7 @@ export default function QuizTypingBlock({ block, isCompleted = false, onComplete
                     <button
                         onClick={checkAnswer}
                         disabled={!input.trim()}
-                        className="px-8 py-3 bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700 active:scale-95 transition-all shadow-lg shadow-sky-200 disabled:opacity-50 disabled:shadow-none"
+                        className="w-full sm:w-auto px-12 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none"
                     >
                         Check Answer
                     </button>
@@ -106,8 +100,8 @@ export default function QuizTypingBlock({ block, isCompleted = false, onComplete
                     )}
 
                     {explanation && (
-                        <div className="p-4 bg-white rounded-xl border border-sky-100 text-sky-800 text-sm">
-                            <span className="font-bold uppercase tracking-wider text-xs block mb-1 text-sky-400">Explanation</span>
+                        <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 text-slate-700 text-sm">
+                            <span className="font-bold uppercase tracking-wider text-xs block mb-1 text-primary">Explanation</span>
                             {explanation}
                         </div>
                     )}
@@ -115,4 +109,5 @@ export default function QuizTypingBlock({ block, isCompleted = false, onComplete
             )}
         </div>
     );
+
 }

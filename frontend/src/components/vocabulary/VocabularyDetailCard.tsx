@@ -73,147 +73,116 @@ export const VocabularyDetailCard: React.FC<Props> = ({ vocabulary: initialData,
     };
 
     return (
-        <div className="backdrop-blur-3xl bg-white/80 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-white/60 overflow-hidden ring-1 ring-white/50 transition-all font-sans relative z-0">
+        <div className="bg-white rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden transition-all font-sans relative z-0">
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
 
             {/* 1. Detail Header */}
-            <div className="px-8 pt-10 pb-8 text-center relative border-b border-primary/20 bg-primary text-white">
-                <div className="space-y-4">
+            {/* 1. Detail Header - Modern Gradient Design */}
+            <div className="relative px-6 py-8 md:px-8 md:py-10 text-center overflow-hidden">
+                {/* Solid Primary Background */}
+                <div className="absolute inset-0 bg-primary"></div>
+
+                <div className="relative z-10 space-y-2">
                     {/* Word Title */}
-                    <div className="relative inline-block">
+                    <div className="flex justify-center">
                         <InlineEditField
                             value={formData.english_word}
                             isEditing={isEditing}
                             onChange={(val) => updateField('english_word', val)}
-                            className="text-5xl md:text-6xl font-black text-white tracking-tight leading-tight bg-transparent text-center"
-                            inputClassName="text-5xl md:text-6xl font-black text-center h-auto py-4 text-slate-900"
+                            className="text-4xl md:text-7xl font-black text-white tracking-tight leading-tight bg-transparent text-center drop-shadow-sm"
+                            inputClassName="text-4xl md:text-7xl font-black text-center h-auto py-4 text-slate-900"
                             required
                         />
-                        {/* Decorative Underline */}
-                        {!isEditing && (
-                            <div className="absolute -bottom-2 left-0 right-0 h-1.5 bg-white/20 rounded-full blur-[1px]"></div>
-                        )}
                     </div>
 
-                    {/* Pronunciation */}
-                    <div className="flex items-center justify-center gap-3 text-blue-100">
+                    {/* Pronunciation (Below Word) */}
+                    <div className="flex items-center justify-center gap-2 mb-4">
                         <InlineEditField
                             value={formData.pronunciation || ''}
                             isEditing={isEditing}
                             onChange={(val) => updateField('pronunciation', val)}
                             placeholder="/pronunciation/"
-                            className="text-2xl font-serif italic text-blue-100 bg-transparent text-center"
-                            inputClassName="text-2xl font-serif italic text-center text-slate-500"
+                            className="text-lg md:text-2xl font-serif italic text-blue-200/90 bg-transparent text-center"
+                            inputClassName="text-lg md:text-2xl font-serif italic text-center text-slate-500"
                         />
-                        {!isEditing && (
+                        {!isEditing && formData.audio_url && (
                             <button
                                 onClick={() => {
-                                    if (formData.audio_url) {
-                                        const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
-                                        const url = formData.audio_url.startsWith('http')
-                                            ? formData.audio_url
-                                            : `${baseUrl}${formData.audio_url.startsWith('/') ? '' : '/'}${formData.audio_url}`;
-                                        new Audio(url).play().catch(e => console.error("Audio playback failed", e));
-                                    }
+                                    const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000';
+                                    const url = formData.audio_url?.startsWith('http')
+                                        ? formData.audio_url
+                                        : `${baseUrl}${formData.audio_url?.startsWith('/') ? '' : '/'}${formData.audio_url}`;
+                                    new Audio(url).play().catch(e => console.error("Audio playback failed", e));
                                 }}
-                                disabled={!formData.audio_url}
-                                className={`p-2 rounded-full hover:bg-white/10 transition-colors ${formData.audio_url ? 'text-white/80 cursor-pointer' : 'text-white/30 cursor-not-allowed'}`}
-                                title={formData.audio_url ? "Play Pronunciation" : "No Audio Available"}
+                                className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-blue-200 hover:text-white"
+                                title="Play Pronunciation"
                             >
                                 <Volume2 size={20} />
                             </button>
                         )}
                     </div>
 
-                    {/* Badges Container */}
-                    <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
-                        {/* Category Badge */}
-                        <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full border border-white/20 shadow-sm text-white font-semibold text-sm backdrop-blur-sm">
+                    {/* Glassmorphism Badges Row */}
+                    <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 mt-5">
+                        {/* 1. Category Badge */}
+                        <div className="flex items-center justify-center px-2 py-1 md:px-4 md:py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white/90 text-xs md:text-sm font-medium shadow-sm min-w-[80px] h-[34px] md:min-w-[120px] md:h-[42px]">
                             <InlineEditField
                                 type="select"
                                 value={formData.part_of_speech}
                                 isEditing={isEditing}
                                 onChange={(val) => updateField('part_of_speech', val)}
                                 options={PART_OF_SPEECH_OPTIONS}
-                                className="bg-transparent text-sm font-semibold capitalize min-w-[60px] text-center"
+                                className="bg-transparent capitalize text-center"
                                 inputClassName="text-slate-700"
                             />
                         </div>
 
-                        {/* Status Badge */}
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm text-sm font-bold backdrop-blur-sm transition-colors bg-white/10 border-white/20 text-white`}>
+                        {/* 2. Status Badge */}
+                        <div className="flex items-center justify-center px-2 py-1 md:px-4 md:py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white/90 text-xs md:text-sm font-medium shadow-sm min-w-[80px] h-[34px] md:min-w-[120px] md:h-[42px]">
                             <InlineEditField
                                 type="select"
                                 value={formData.learning_status}
                                 isEditing={isEditing}
                                 onChange={(val) => updateField('learning_status', val)}
                                 options={LEARNING_STATUS_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
-                                className="bg-transparent text-sm font-bold capitalize min-w-[80px]"
+                                className="bg-transparent capitalize text-center"
                                 inputClassName="text-slate-700"
                             />
                         </div>
 
-                        {/* Date Badge */}
-                        <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full border border-white/20 shadow-sm text-blue-100 font-medium text-sm backdrop-blur-sm">
+                        {/* 3. Date Badge (Restored) */}
+                        <div className="flex items-center justify-center px-2 py-1 md:px-4 md:py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white/90 text-xs md:text-sm font-medium shadow-sm min-w-[80px] h-[34px] md:min-w-[120px] md:h-[42px]">
                             <span>{formatDate(formData.created_at)}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="p-8 md:p-10 space-y-10 bg-slate-50/30">
+            <div className="p-5 md:p-10 space-y-8 md:space-y-10 bg-slate-50/30">
                 {/* 2. Detail Grid - Meaning & POS */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Meaning Card */}
-                    <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-white/60 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group text-center">
-                        <div className="mb-4">
-                            <h2 className="text-lg font-bold text-slate-800">Meaning</h2>
-                        </div>
-                        <div className="min-h-[60px] flex items-center justify-center">
-                            <InlineEditField
-                                value={formData.translation}
-                                isEditing={isEditing}
-                                onChange={(val) => updateField('translation', val)}
-                                className="text-2xl font-medium text-slate-700 leading-relaxed w-full bg-transparent text-center"
-                                inputClassName="text-2xl font-medium text-slate-700 text-center"
-                                required
-                            />
-                        </div>
+                {/* 2. Primary Definition Section (Meaning + Usage) */}
+                {/* 2. Primary Definition Section (Meaning + Usage) */}
+                <div className="bg-white rounded-3xl p-5 md:p-8 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 text-center space-y-2 relative z-10">
+                    {/* Meaning / Translation */}
+                    <div>
+                        <InlineEditField
+                            value={formData.translation}
+                            isEditing={isEditing}
+                            onChange={(val) => updateField('translation', val)}
+                            className="text-2xl md:text-5xl font-black text-slate-800 tracking-tight leading-tight w-full bg-transparent text-center"
+                            inputClassName="text-2xl md:text-5xl font-black text-slate-800 text-center"
+                            placeholder="Translation"
+                            required
+                        />
                     </div>
 
-                    {/* Personal Notes Card */}
-                    <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-white/60 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group text-center">
-                        <div className="mb-4">
-                            <h2 className="text-lg font-bold text-slate-800">Personal Notes</h2>
-                        </div>
-                        <div className="min-h-[60px]">
-                            <InlineEditField
-                                type="textarea"
-                                value={formData.personal_notes || ''}
-                                isEditing={isEditing}
-                                onChange={(val) => updateField('personal_notes', val)}
-                                className="text-base text-slate-600 leading-relaxed w-full bg-transparent h-full placeholder:italic text-center"
-                                inputClassName="text-base text-slate-600 text-center"
-                                placeholder="Add your personal notes here..."
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* 3. Usage Note Section */}
-                <div className="bg-amber-50/40 backdrop-blur-xl rounded-3xl p-8 border border-amber-100/50 shadow-sm relative overflow-hidden group text-center">
-                    {/* Decorative background icon */}
-                    <BookOpen className="absolute -right-4 -bottom-4 text-amber-500/10 w-32 h-32 rotate-12 transition-transform group-hover:rotate-6 duration-500 pointer-events-none" />
-
-                    <div className="mb-4 relative z-10">
-                        <h2 className="text-lg font-bold text-slate-800">Usage Note</h2>
-                    </div>
-                    <div className="relative z-10">
+                    {/* Usage Note / Description */}
+                    <div className="max-w-3xl mx-auto">
                         {isFetchingDetails && !formData.usage_note ? (
                             <div className="animate-pulse space-y-2">
-                                <div className="h-4 bg-amber-200/50 rounded w-3/4 mx-auto"></div>
-                                <div className="h-4 bg-amber-200/50 rounded w-1/2 mx-auto"></div>
+                                <div className="h-4 bg-slate-200 rounded w-3/4 mx-auto"></div>
+                                <div className="h-4 bg-slate-200 rounded w-1/2 mx-auto"></div>
                             </div>
                         ) : (
                             <InlineEditField
@@ -221,31 +190,60 @@ export const VocabularyDetailCard: React.FC<Props> = ({ vocabulary: initialData,
                                 value={formData.usage_note || ''}
                                 isEditing={isEditing}
                                 onChange={(val) => updateField('usage_note', val)}
-                                className="text-lg text-slate-700 leading-relaxed w-full bg-transparent placeholder:text-amber-800/30 text-center"
-                                inputClassName="text-lg text-slate-700 text-center"
-                                placeholder="Common contexts, origins, or distinct nuances..."
+                                className="text-sm md:text-xl text-slate-600 leading-relaxed w-full bg-transparent placeholder:text-slate-400 text-center"
+                                inputClassName="text-sm md:text-xl text-slate-600 text-center min-h-[80px]"
+                                placeholder="Add a usage note or definition..."
                             />
                         )}
                     </div>
                 </div>
 
-                {/* 4. Examples Section */}
-                <div className="space-y-6 text-center">
-                    <div className="flex items-center justify-center">
-                        <h2 className="text-2xl font-bold text-slate-900">Example Sentences</h2>
+                {/* 3. Personal Notes Section */}
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden text-center group">
+                    {/* Header */}
+                    <div className="px-5 py-4 md:px-8 md:py-6 border-b border-slate-50 flex items-center justify-center bg-white">
+                        <h2 className="text-lg md:text-lg font-bold text-slate-800">Personal Notes</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-6">
+                    {/* Content */}
+                    <div className="p-5 md:p-8 min-h-[120px] flex items-center justify-center">
+                        <InlineEditField
+                            type="textarea"
+                            value={formData.personal_notes || ''}
+                            isEditing={isEditing}
+                            onChange={(val) => updateField('personal_notes', val)}
+                            className="text-sm md:text-base text-slate-600 leading-relaxed w-full bg-transparent h-full placeholder:italic text-center font-medium"
+                            inputClassName="text-sm md:text-base text-slate-600 text-center"
+                            placeholder="Add your personal notes here..."
+                        />
+                    </div>
+                </div>
+
+                {/* 4. Examples Section */}
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden text-left">
+                    {/* Header */}
+                    <div className="px-5 py-4 md:px-8 md:py-6 border-b border-slate-50 flex items-center justify-between bg-white text-left">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg md:text-lg font-bold text-slate-800">Example Sentences</h2>
+                        </div>
+                        <div className="px-3 py-1 bg-slate-50 rounded-full border border-slate-100 text-xs font-semibold text-slate-500">
+                            {formData.example_sentences?.length || 0} Examples
+                        </div>
+                    </div>
+
+                    {/* Content List */}
+                    <div className="p-0 text-left">
                         {isFetchingDetails && (!formData.example_sentences || formData.example_sentences.length === 0) ? (
-                            // Skeleton for Examples
-                            [...Array(2)].map((_, i) => (
-                                <div key={i} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm animate-pulse">
-                                    <div className="h-5 bg-slate-200 rounded w-2/3 mx-auto mb-3"></div>
-                                    <div className="h-4 bg-slate-100 rounded w-1/2 mx-auto pt-3 border-t border-slate-50"></div>
-                                </div>
-                            ))
+                            <div className="p-5 md:p-8 space-y-8">
+                                {[...Array(2)].map((_, i) => (
+                                    <div key={i} className="animate-pulse space-y-3">
+                                        <div className="h-6 bg-slate-100 rounded w-3/4"></div>
+                                        <div className="h-4 bg-slate-50 rounded w-1/2"></div>
+                                    </div>
+                                ))}
+                            </div>
                         ) : isEditing ? (
-                            <div className="md:col-span-1">
+                            <div className="p-5 md:p-8">
                                 <ExampleSentencesInput
                                     sentences={formData.example_sentences || []}
                                     onChange={(sentences) => updateField('example_sentences', sentences)}
@@ -253,20 +251,30 @@ export const VocabularyDetailCard: React.FC<Props> = ({ vocabulary: initialData,
                             </div>
                         ) : (
                             formData.example_sentences?.length > 0 ? (
-                                formData.example_sentences.map((ex, idx) => (
-                                    <div key={idx} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden text-center">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                        <p className="text-lg text-slate-800 font-medium font-serif italic mb-3 relative z-10">"{ex.sentence}"</p>
-                                        {ex.translation && (
-                                            <div className="pt-3 border-t border-slate-50 relative z-10">
-                                                <p className="text-slate-500 text-sm font-medium">{ex.translation}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
+                                <div className="divide-y divide-slate-50">
+                                    {formData.example_sentences.map((ex, idx) => (
+                                        <div key={idx} className="p-5 md:p-8 group hover:bg-slate-50/30 transition-colors text-left">
+                                            {/* English Sentence */}
+                                            <p className="text-base md:text-xl text-slate-800 font-serif italic mb-3 leading-relaxed">
+                                                "{ex.sentence}"
+                                            </p>
+                                            {/* Translation */}
+                                            {ex.translation && (
+                                                <div className="flex items-start gap-3 pl-1">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0"></div>
+                                                    <p className="text-xs md:text-base text-slate-500 font-medium leading-relaxed">{ex.translation}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <div className="p-8 text-center bg-slate-100/50 rounded-3xl border border-dashed border-slate-200">
+                                <div className="p-12 text-center">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                        <FileText size={24} />
+                                    </div>
                                     <p className="text-slate-400 italic">No example sentences added yet.</p>
+                                    <p className="text-slate-300 text-sm mt-1">Edit to add examples</p>
                                 </div>
                             )
                         )}

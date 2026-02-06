@@ -304,14 +304,14 @@ export default function LessonViewerPage() {
             </div>
 
             {/* Main Content */}
-            <main className="max-w-4xl mx-auto pt-28 px-4 sm:px-6 pb-40 space-y-12">
-                <div className="text-center mb-12">
+            <main className="max-w-4xl mx-auto pt-5 md:pt-28 px-4 sm:px-6 pb-20 md:pb-40 space-y-8 md:space-y-12">
+                <div className="text-center mb-6 md:mb-12">
                     <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-3">{lesson.title}</h1>
                     <p className="text-slate-500 font-medium">{lesson.description}</p>
                 </div>
 
                 {/* Content Blocks */}
-                <div className="space-y-8">
+                <div className="space-y-4 md:space-y-8">
                     {blocks.map((block: any, index: number) => {
                         const isCritical = index < 2;
                         return (

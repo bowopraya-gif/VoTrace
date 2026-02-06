@@ -42,8 +42,13 @@ const PRIMARY_COLOR = '#0A56C8';
 
 const cardStyle = "bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300";
 
+import { useMobileTooltip } from '@/hooks/useMobileTooltip'; // Add import
+
 export default function PracticeStatsSection({ stats, isLoading, period, timezone }: PracticeStatsSectionProps) {
     // Internal state removed - data controlled by parent
+
+    // --- Mobile Tooltip Hook ---
+    const { handleTap, TooltipComponent } = useMobileTooltip();
 
     if (isLoading || !stats) {
         return (
@@ -70,6 +75,7 @@ export default function PracticeStatsSection({ stats, isLoading, period, timezon
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+            <TooltipComponent /> {/* Portal Tooltip */}
             {/* Overview Stats Row - Only 4 Cards */}
             <div className="lg:col-span-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard label="Total Sessions" value={stats.overview.sessions} icon={Zap} color="text-amber-500" bg="bg-amber-50" />
@@ -107,7 +113,14 @@ export default function PracticeStatsSection({ stats, isLoading, period, timezon
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                                        <XAxis dataKey="date" fontSize={10} tickFormatter={(v) => v.slice(5)} axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
+                                        <XAxis
+                                            dataKey="date"
+                                            fontSize={10}
+                                            tickFormatter={(v) => new Date(v).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fill: '#64748b' }}
+                                        />
                                         <YAxis domain={[dynamicMin, dynamicMax]} tickFormatter={(v) => `${v}%`} fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} width={35} />
                                         <Tooltip
                                             formatter={(value) => [`${value}%`, 'Accuracy']}
@@ -143,34 +156,39 @@ export default function PracticeStatsSection({ stats, isLoading, period, timezon
                     <h3 className="text-lg font-bold text-slate-900 tracking-tight">By Mode</h3>
                     <p className="text-sm text-slate-500">Accuracy per practice type</p>
                 </div>
-                <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stats.by_mode} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
-                            <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} fontSize={10} axisLine={false} tickLine={false} />
-                            <YAxis type="category" dataKey="mode" width={110} fontSize={10} tickFormatter={(v) => MODE_LABELS[v] || v} axisLine={false} tickLine={false} />
-                            <Tooltip
-                                content={({ active, payload }) => {
-                                    if (active && payload && payload.length) {
-                                        const data = payload[0].payload;
-                                        return (
-                                            <div className="bg-slate-900 text-white px-3 py-2 rounded-lg shadow-xl text-sm">
-                                                <div className="font-bold">{MODE_LABELS[data.mode] || data.mode}</div>
-                                                <div className="text-slate-300">{data.accuracy}% accuracy</div>
-                                                <div className="text-slate-400 text-xs mt-1">{data.sessions} sessions</div>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                }}
-                            />
-                            <Bar dataKey="accuracy" radius={[0, 6, 6, 0]} barSize={20}>
-                                {stats.by_mode.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={MODE_COLORS[entry.mode] || '#94A3B8'} />
-                                ))}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
+                <div className="space-y-6">
+                    {stats.by_mode.map((item, index) => {
+                        const label = MODE_LABELS[item.mode] || item.mode;
+
+                        return (
+                            <div key={item.mode} className="group">
+                                <div className="flex justify-between items-end mb-2">
+                                    <span className="text-sm font-bold text-slate-900 font-inter tracking-tight">
+                                        {label}
+                                    </span>
+                                    {/* Mobile/All: Show sessions inline */}
+                                    <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                                        {Math.round(item.accuracy)}%
+                                        <span className="text-[10px] font-medium text-slate-400 font-inter">
+                                            • {item.sessions} sessions
+                                        </span>
+                                    </span>
+                                </div>
+                                <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        whileInView={{ width: `${item.accuracy}%` }}
+                                        transition={{ duration: 1, ease: "easeOut", delay: index * 0.1 }}
+                                        viewport={{ once: true }}
+                                        className={`h-full bg-blue-500 rounded-full relative`}
+                                    >
+                                        {/* Shimmer effect */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent w-full -translate-x-full animate-[shimmer_2s_infinite]" />
+                                    </motion.div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </motion.div>
 
@@ -206,23 +224,106 @@ export default function PracticeStatsSection({ stats, isLoading, period, timezon
                 transition={{ delay: 0.25 }}
                 className={`${cardStyle} lg:col-span-4`}
             >
-                <div className="mb-4 flex items-center justify-between">
-                    <div>
-                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Activity Heatmap</h3>
-                        <p className="text-sm text-slate-500">2026 Practice Consistency</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <span>Less</span>
-                        <div className="flex gap-0.5">
-                            <div className="w-3 h-3 rounded-sm bg-slate-100"></div>
-                            <div className="w-3 h-3 rounded-sm bg-[#0A56C8]/30"></div>
-                            <div className="w-3 h-3 rounded-sm bg-[#0A56C8]/60"></div>
-                            <div className="w-3 h-3 rounded-sm bg-[#0A56C8]"></div>
+                {/* MOBILE VERSION (High-Fidelity, Consistent Design) */}
+                <div className="lg:hidden">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Activity Heatmap</h3>
+                            <p className="text-sm text-slate-500">2026 Consistency</p>
                         </div>
-                        <span>More</span>
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                            <span>Less</span>
+                            <div className="w-2.5 h-2.5 bg-slate-100 rounded-[2px]" />
+                            <div className="w-2.5 h-2.5 bg-[#93c5fd] rounded-[2px]" />
+                            <div className="w-2.5 h-2.5 bg-[#3b82f6] rounded-[2px]" />
+                            <div className="w-2.5 h-2.5 bg-[#1e3a8a] rounded-[2px]" />
+                            <span>More</span>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                        <div className="min-w-[600px]">
+                            {/* Days Header */}
+                            <div className="flex gap-1 mb-2 pl-12">
+                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                    <div key={day} className="flex-1 text-[9px] text-slate-300 font-medium text-center">
+                                        {day}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Month Rows */}
+                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, monthIdx) => {
+                                const daysInMonth = new Date(2026, monthIdx + 1, 0).getDate();
+                                return (
+                                    <div key={month} className="flex items-center gap-1 mb-2">
+                                        <div className="w-10 text-[11px] font-bold text-slate-700 shrink-0">
+                                            {month}
+                                        </div>
+                                        {Array.from({ length: 31 }, (_, dayIdx) => {
+                                            const day = dayIdx + 1;
+                                            const isValidDay = day <= daysInMonth;
+                                            const year = 2026;
+                                            const dateString = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                                            const dayData = stats.weekly_heatmap?.find(d => d.date === dateString);
+                                            const count = dayData?.count || 0;
+
+                                            let colorClass = 'bg-slate-100';
+                                            if (count > 0) {
+                                                if (count >= 8) colorClass = 'bg-[#1e3a8a]';
+                                                else if (count >= 5) colorClass = 'bg-[#2563eb]';
+                                                else if (count >= 2) colorClass = 'bg-[#60a5fa]';
+                                                else colorClass = 'bg-[#dbeafe]';
+                                            }
+
+                                            // Tooltip Content
+                                            const tooltipContent = (
+                                                <div className="text-center">
+                                                    <div className="font-bold mb-1 text-blue-200">
+                                                        {month} {day}, {year}
+                                                    </div>
+                                                    <div className="text-white font-black text-lg">
+                                                        {count} <span className="text-xs font-normal text-slate-400">sessions</span>
+                                                    </div>
+                                                </div>
+                                            );
+
+                                            return (
+                                                <div
+                                                    key={dayIdx}
+                                                    onClick={(e) => isValidDay && handleTap(e, tooltipContent)}
+                                                    className={`flex-1 aspect-square rounded-[3px] ${isValidDay ? colorClass : 'bg-transparent'} ${isValidDay ? 'active:scale-90 transition-transform cursor-pointer' : ''}`}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
-                <YearlyHeatmap data={stats.weekly_heatmap} year={2026} />
+
+                {/* DESKTOP VERSION (Original) */}
+                <div className="hidden lg:block">
+                    <div className="mb-4 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Activity Heatmap</h3>
+                            <p className="text-sm text-slate-500">2026 Practice Consistency</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <span>Less</span>
+                            <div className="flex gap-0.5">
+                                <div className="w-3 h-3 rounded-sm bg-slate-100"></div>
+                                <div className="w-3 h-3 rounded-sm bg-[#0A56C8]/30"></div>
+                                <div className="w-3 h-3 rounded-sm bg-[#0A56C8]/60"></div>
+                                <div className="w-3 h-3 rounded-sm bg-[#0A56C8]"></div>
+                            </div>
+                            <span>More</span>
+                        </div>
+                    </div>
+                    <YearlyHeatmap data={stats.weekly_heatmap} year={2026} />
+                </div>
             </motion.div>
 
             {/* Bi-Directional Balance Meter - Spans 6 cols (Full Width) */}
@@ -293,7 +394,7 @@ export default function PracticeStatsSection({ stats, isLoading, period, timezon
                     <p className="text-slate-400 text-center py-8">No recent sessions</p>
                 )}
             </motion.div>
-        </div>
+        </div >
     );
 }
 
@@ -473,7 +574,17 @@ function BalanceMeter({ data }: { data: { direction: string; accuracy: number }[
     const status = getBalanceStatus();
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
+            {/* Mobile Only: Status Header (Above Bar) */}
+            <div className="md:hidden flex flex-col items-center justify-center text-center mb-2">
+                <div className={`text-lg font-bold ${status.color} transition-colors duration-300`}>
+                    {status.emoji} {status.label}
+                </div>
+                <div className="text-xs text-slate-400 mt-1 font-medium bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                    {balance > 0 ? `+${balance.toFixed(0)}` : balance.toFixed(0)} balance
+                </div>
+            </div>
+
             {/* Balance Bar */}
             <div className="relative">
                 {/* Track with gradient and glow */}
@@ -522,33 +633,40 @@ function BalanceMeter({ data }: { data: { direction: string; accuracy: number }[
                 </motion.div>
             </div>
 
-            {/* Labels */}
-            <div className="flex justify-between items-start text-sm">
+            {/* Labels - Responsive Grid Layout */}
+            <div className="grid grid-cols-2 md:grid-cols-3 items-start gap-y-6 md:gap-y-0 transition-all duration-300 ease-in-out">
+                {/* 1. EN → ID Stats */}
                 <div className="text-left">
-                    <div className="flex items-center gap-1.5 text-blue-600 font-bold">
+                    <div className="flex items-center gap-1.5 text-blue-600 font-bold mb-1">
                         <span className="w-2 h-2 rounded-full bg-blue-500" />
                         EN → ID
                     </div>
-                    <div className="text-2xl font-black text-slate-900">{enToId}%</div>
-                    <div className="text-xs text-slate-500 font-medium">Passive Recognition</div>
+                    <div className="text-2xl font-black text-slate-900 leading-none mb-1">{enToId}%</div>
+                    <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                        Passive <span className="hidden md:inline">Recognition</span>
+                    </div>
                 </div>
 
-                <div className="text-center flex-1">
-                    <div className={`text-lg font-bold ${status.color}`}>
+                {/* 2. Desktop Only: Balance Status (Center) */}
+                <div className="hidden md:flex flex-col items-center justify-center text-center">
+                    <div className={`text-lg font-bold ${status.color} transition-colors duration-300`}>
                         {status.emoji} {status.label}
                     </div>
-                    <div className="text-xs text-slate-400 mt-1">
+                    <div className="text-xs text-slate-400 mt-1 font-medium bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
                         {balance > 0 ? `+${balance.toFixed(0)}` : balance.toFixed(0)} balance
                     </div>
                 </div>
 
-                <div className="text-right">
-                    <div className="flex items-center gap-1.5 text-violet-600 font-bold justify-end">
+                {/* 3. ID → EN Stats */}
+                <div className="text-right flex flex-col items-end">
+                    <div className="flex items-center gap-1.5 text-violet-600 font-bold justify-end mb-1">
                         ID → EN
                         <span className="w-2 h-2 rounded-full bg-violet-500" />
                     </div>
-                    <div className="text-2xl font-black text-slate-900">{idToEn}%</div>
-                    <div className="text-xs text-slate-500 font-medium">Active Recall</div>
+                    <div className="text-2xl font-black text-slate-900 leading-none mb-1">{idToEn}%</div>
+                    <div className="text-xs text-slate-500 font-medium whitespace-nowrap">
+                        Active <span className="hidden md:inline">Recall</span>
+                    </div>
                 </div>
             </div>
         </div>

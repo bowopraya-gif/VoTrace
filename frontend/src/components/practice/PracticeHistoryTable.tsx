@@ -60,7 +60,8 @@ export default function PracticeHistoryTable({ history }: PracticeHistoryTablePr
                 </h3>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-sm">
                     <thead>
                         <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider text-xs">
@@ -110,6 +111,58 @@ export default function PracticeHistoryTable({ history }: PracticeHistoryTablePr
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+                {history.map((item) => (
+                    <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                        {/* Header: Mode & Date */}
+                        <div className="flex items-center justify-between mb-4">
+                            {getModeBadge(item.mode)}
+                            <span className="text-xs font-bold text-slate-400">
+                                {format(new Date(item.created_at), 'MMM d')}
+                            </span>
+                        </div>
+
+                        {/* Stats Grid - MATCHING IMAGE STYLE */}
+                        <div className="flex items-center bg-slate-50/80 rounded-2xl border border-slate-100 py-4">
+                            {/* Score */}
+                            <div className="flex-1 flex flex-col items-center justify-center px-1">
+                                <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Score</div>
+                                <div className="flex items-center gap-1.5 font-black text-slate-700 text-base sm:text-lg">
+                                    <CheckCircle size={14} className="text-emerald-500" />
+                                    <span>{item.correct_answers}</span>
+                                    <span className="text-slate-300 font-medium text-xs sm:text-sm">/{item.total_questions}</span>
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <div className="w-px h-8 bg-slate-200" />
+
+                            {/* Accuracy */}
+                            <div className="flex-1 flex flex-col items-center justify-center px-1">
+                                <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Accuracy</div>
+                                <div className={`font-black text-base sm:text-lg ${item.accuracy >= 80 ? 'text-emerald-500' :
+                                    item.accuracy >= 60 ? 'text-amber-500' : 'text-red-500'
+                                    }`}>
+                                    {Number(item.accuracy || 0).toFixed(2)}%
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <div className="w-px h-8 bg-slate-200" />
+
+                            {/* Duration */}
+                            <div className="flex-1 flex flex-col items-center justify-center px-1">
+                                <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Duration</div>
+                                <div className="font-black text-slate-700 text-base sm:text-lg font-mono">
+                                    {formatDuration(item.duration_seconds)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

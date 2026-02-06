@@ -56,14 +56,10 @@ export default function VocabularyDetailPage() {
     // We can pass `isFetching` to show skeletons for missing parts.
 
     return (
-        <div className="min-h-screen bg-neutral-50/50 py-12">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <VocabularyDetailCard
-                    vocabulary={vocabulary}
-                    isFetchingDetails={isFetching}
-                />
-            </div>
-        </div>
+        <VocabularyDetailCard
+            vocabulary={vocabulary}
+            isFetchingDetails={isFetching}
+        />
     );
 }
 

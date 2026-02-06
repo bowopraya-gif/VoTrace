@@ -94,7 +94,7 @@ export default function ModuleDetailPage() {
                 </div>
 
                 <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row gap-8 items-end h-full">
-                    <div className="flex-1 space-y-4">
+                    <div className="flex-1 w-full flex flex-col h-full justify-between md:justify-end space-y-4">
                         <div className="flex items-center gap-3">
                             <span className="px-3 py-1 bg-white/10 backdrop-blur-md text-white border border-white/20 text-xs font-bold rounded-lg uppercase tracking-wider">
                                 {module.category}
@@ -103,12 +103,14 @@ export default function ModuleDetailPage() {
                                 {module.difficulty}
                             </span>
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
-                            {module.title}
-                        </h1>
-                        <p className="text-slate-100 text-lg max-w-2xl leading-relaxed drop-shadow-md font-medium">
-                            {module.description}
-                        </p>
+                        <div className="space-y-4">
+                            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
+                                {module.title}
+                            </h1>
+                            <p className="text-slate-100 text-lg max-w-2xl leading-relaxed drop-shadow-md font-medium">
+                                {module.description}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -164,7 +166,7 @@ export default function ModuleDetailPage() {
                                     </p>
 
                                     {/* Stats Row */}
-                                    <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                                         {/* Status Badge */}
                                         <span className={cn(
                                             "flex items-center gap-1.5",
@@ -175,27 +177,31 @@ export default function ModuleDetailPage() {
 
                                         <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block" />
 
-                                        {/* Estimated Time */}
-                                        <div className="flex items-center gap-1.5 text-slate-500">
-                                            <Clock size={14} />
-                                            Est. {lesson.estimated_mins}m
-                                        </div>
+                                        {/* Time Stats Container */}
+                                        <div className="flex items-center gap-4">
+                                            {/* Estimated Time */}
+                                            <div className="flex items-center gap-1.5 text-slate-500">
+                                                <Clock size={14} />
+                                                Est. {lesson.estimated_mins}m
+                                            </div>
 
-                                        {/* Time Spent (if any) */}
-                                        {progress?.time_spent ? (
-                                            <>
-                                                <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block" />
-                                                <div className="flex items-center gap-1.5 text-slate-500">
-                                                    <BookOpen size={14} />
-                                                    {Math.floor(progress.time_spent / 60)}m {progress.time_spent % 60}s
-                                                </div>
-                                            </>
-                                        ) : null}
+                                            {/* Time Spent (if any) */}
+                                            {progress?.time_spent ? (
+                                                <>
+                                                    <span className="w-1 h-1 rounded-full bg-slate-300 sm:hidden" />
+                                                    <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block" />
+                                                    <div className="flex items-center gap-1.5 text-slate-500">
+                                                        <BookOpen size={14} />
+                                                        {Math.floor(progress.time_spent / 60)}m {progress.time_spent % 60}s
+                                                    </div>
+                                                </>
+                                            ) : null}
+                                        </div>
                                     </div>
                                 </div>
 
                                 <ArrowRight size={20} className={cn(
-                                    "group-hover:translate-x-1 transition-transform text-slate-300 shrink-0",
+                                    "hidden md:block group-hover:translate-x-1 transition-transform text-slate-300 shrink-0",
                                     isCompleted ? "group-hover:text-emerald-600" : "group-hover:text-primary"
                                 )} />
                             </Link>

@@ -94,49 +94,25 @@ function ProfileContent() {
                     <div className="w-full max-w-4xl mx-auto min-h-[300px]">
                         <div className="grid gap-6">
                             <div className="p-6 border border-slate-200 rounded-xl bg-slate-50 flex items-start gap-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm text-blue-600">
-                                    <Mail size={24} />
-                                </div>
                                 <div className="flex-1">
                                     <h3 className="text-lg font-bold text-slate-900">Email Address</h3>
                                     <p className="text-slate-500 text-sm mt-1">
                                         {user?.email}
                                     </p>
-                                    <button disabled className="mt-4 px-4 py-2 bg-slate-100 text-slate-400 font-semibold rounded-lg text-sm cursor-not-allowed border border-slate-200">
-                                        Cannot be changed
-                                    </button>
                                 </div>
                             </div>
 
                             <div className="p-6 border border-slate-200 rounded-xl bg-slate-50 flex items-start gap-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm text-primary">
-                                    <Lock size={24} />
-                                </div>
                                 <div className="flex-1">
                                     <h3 className="text-lg font-bold text-slate-900">Password</h3>
                                     <p className="text-slate-500 text-sm mt-1">
-                                        Secure your account with a strong password. We recommend changing it periodically.
+                                        ************
                                     </p>
                                     <button
                                         onClick={() => setIsPasswordModalOpen(true)}
                                         className="mt-4 px-4 py-2 bg-white border border-slate-200 text-slate-700 font-semibold rounded-lg text-sm hover:bg-slate-50 transition-colors shadow-sm"
                                     >
                                         Change Password
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="p-6 border border-slate-200 rounded-xl bg-slate-50 flex items-start gap-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm text-emerald-600">
-                                    <Shield size={24} />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-bold text-slate-900">Two-Factor Authentication</h3>
-                                    <p className="text-slate-500 text-sm mt-1">
-                                        Add an extra layer of security to your account. (Coming Soon)
-                                    </p>
-                                    <button disabled className="mt-4 px-4 py-2 bg-slate-100 text-slate-400 font-semibold rounded-lg text-sm cursor-not-allowed">
-                                        Enable 2FA
                                     </button>
                                 </div>
                             </div>

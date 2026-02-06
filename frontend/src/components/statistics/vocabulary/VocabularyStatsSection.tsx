@@ -28,6 +28,7 @@ import { StatsPeriod, VocabularyStats } from '@/types/statistics';
 import api from '@/lib/api';
 import DrillDownModal from '../DrillDownModal';
 import Link from 'next/link';
+import { useMobileTooltip } from '@/hooks/useMobileTooltip';
 
 interface VocabularyStatsSectionProps {
     stats: VocabularyStats | undefined;
@@ -44,19 +45,52 @@ export default function VocabularyStatsSection({ stats, isLoading, period, timez
     const [drillValue, setDrillValue] = useState<string | null>(null);
     const [drillLabel, setDrillLabel] = useState<string>('');
 
-    const simplifiedSrs = useMemo(() => {
+    const chartData = useMemo(() => {
         if (!stats) return [];
-        const newCount = stats.srs_breakdown.find(s => s.level === 0)?.count || 0;
-        const learningCount = stats.srs_breakdown.filter(s => s.level >= 1 && s.level <= 4).reduce((a, b) => a + b.count, 0);
-        const proficientCount = stats.srs_breakdown.filter(s => s.level >= 5 && s.level <= 6).reduce((a, b) => a + b.count, 0);
-        const masteredCount = stats.srs_breakdown.filter(s => s.level >= 7).reduce((a, b) => a + b.count, 0);
+        // Extract data ensuring strictly numbers (force cast)
+        const learning = Number(stats.overview.learning) || 0;
+        const review = Number(stats.overview.review) || 0;
+        const mastered = Number(stats.overview.mastered) || 0;
 
-        return [
-            { label: 'New', count: newCount, color: '#f43f5e', desc: 'Just started' },
-            { label: 'Learning', count: learningCount, color: '#f59e0b', desc: 'Building memory' },
-            { label: 'Proficient', count: proficientCount, color: '#3b82f6', desc: 'Getting strong' },
-            { label: 'Mastered', count: masteredCount, color: '#10b981', desc: 'Long-term memory' },
+        const data = [
+            { name: 'Learning', value: learning, color: '#F59E0B' },   // Amber-500
+            { name: 'Review', value: review, color: '#3B82F6' },     // Blue-500
+            { name: 'Mastered', value: mastered, color: '#10B981' }  // Emerald-500
         ];
+
+        // Filter out zero values to avoid Recharts rendering issues if needed, 
+        // but generally Recharts handles 0 fine by ignoring them. 
+        // Keeping them is better for Legend.
+        return data;
+    }, [stats]);
+
+    const processedMasteredActivity = useMemo(() => {
+        if (!stats) return [];
+
+        // Generate last 7 days including today
+        const days = [];
+        const today = new Date(); // Browser time (User's "Today")
+
+        for (let i = 6; i >= 0; i--) { // Reverse order: 6 days ago -> Today
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateString = d.toISOString().split('T')[0]; // YYYY-MM-DD
+
+            // Find data for this date
+            const existing = stats.mastered_activity.find((item: any) => item.date === dateString);
+
+            days.push({
+                date: dateString,
+                mastered: existing ? existing.mastered : 0
+            });
+        }
+
+        return days;
+    }, [stats]);
+
+    const masteryPercentage = useMemo(() => {
+        if (!stats || stats.overview.total === 0) return 0;
+        return Math.round((stats.overview.mastered / stats.overview.total) * 100);
     }, [stats]);
 
     const handleReviewClick = (type: string, label: string) => {
@@ -65,7 +99,9 @@ export default function VocabularyStatsSection({ stats, isLoading, period, timez
         setDrillLabel(label);
     };
 
-    // Error handling moved to parent or kept specific handled
+    // --- Mobile Tooltip Hook Instantiation ---
+    const { handleTap, TooltipComponent } = useMobileTooltip();
+
     if (isLoading || !stats) return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
             {[...Array(6)].map((_, i) => (
@@ -82,129 +118,104 @@ export default function VocabularyStatsSection({ stats, isLoading, period, timez
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
         >
+            <TooltipComponent /> {/* Portal Tooltip */}
+
             {/* ROW 1: (1) Status Distribution & (8) Mastered Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* 1. Status Distribution (Pie Chart) - FIXED VISIBILITY */}
-                <div className={`${cardStyle}`}>
+                {/* 1. Status Distribution (Pie Chart) - Spans 1 col */}
+                <div className={`${cardStyle} lg:col-span-1`}>
                     <div className="mb-4">
-                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Status Distribution</h3>
-                        <p className="text-sm text-slate-500">Mastery Snapshot</p>
+                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Vocabulary Status</h3>
+                        <p className="text-sm text-slate-500">Distribution by proficiency</p>
                     </div>
-                    {/* Fixed Height Container */}
-                    <div className="h-64 w-full relative">
+                    <div className="h-[220px] w-full relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
-                                    data={[
-                                        { name: 'Mastered', value: Number(stats.overview.mastered), color: '#10b981' },
-                                        { name: 'Learning', value: Number(stats.overview.learning), color: '#f59e0b' },
-                                        { name: 'Review', value: Number(stats.overview.review), color: '#f43f5e' },
-                                    ]}
+                                    data={chartData}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius="60%"
-                                    outerRadius="80%"
+                                    innerRadius={65}
+                                    outerRadius={85}
                                     paddingAngle={5}
                                     dataKey="value"
+                                    stroke="none"
+                                    cornerRadius={4}
+                                    isAnimationActive={true}
+                                    animationDuration={1500}
+                                    animationEasing="ease-out"
                                 >
-                                    {[{ color: '#10b981' }, { color: '#f59e0b' }, { color: '#f43f5e' }].map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
+                                    {chartData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    position={{ y: 0 }}
-                                    cursor={{ fill: '#f8fafc', radius: 8 }}
-                                    content={({ active, payload }) => {
-                                        if (active && payload && payload.length) {
-                                            const data = payload[0].payload; // Recharts Pie payload structure
-                                            // data has: name, value, color, etc.
-                                            return (
-                                                <div className="bg-slate-900/95 backdrop-blur-sm text-white text-xs p-3 rounded-xl shadow-xl border border-slate-800">
-                                                    <div className="font-bold mb-1 text-sm text-white">{data.name}</div>
-                                                    <div className="flex items-center justify-between gap-6">
-                                                        <span className="text-slate-400">Count:</span>
-                                                        <span className="font-mono font-bold text-white text-sm">{data.value}</span>
-                                                    </div>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
+                                    contentStyle={{
+                                        borderRadius: '12px',
+                                        border: 'none',
+                                        boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.1)',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                        backdropFilter: 'blur(4px)'
                                     }}
+                                    itemStyle={{ color: '#1e293b', fontWeight: 600, fontSize: '13px' }}
+                                    formatter={(value: any) => [`${value} words`, '']}
                                 />
-                                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                             </PieChart>
                         </ResponsiveContainer>
-                        {/* Centered Mastery Rate */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-                            <span className="text-3xl font-black text-slate-800">{stats.overview.mastery_rate}%</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mastery</span>
+                        {/* Center Text (Mastery Percentage) */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none animate-in fade-in zoom-in duration-500">
+                            <span className="text-4xl font-black text-slate-900 tracking-tight">{masteryPercentage}%</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Mastered</span>
                         </div>
+                    </div>
+                    {/* Updated Legend */}
+                    <div className="flex justify-center gap-4 mt-4">
+                        {chartData.map((item) => (
+                            <div key={item.name} className="flex flex-col items-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{item.name}</span>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                                    <span className="font-bold text-slate-700 text-sm">{item.value}</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* 8. Mastered Activity (Moved from bottom) */}
+                {/* 2. Mastered Activity (Area Chart) - Spans 2 cols */}
                 <div className={`${cardStyle} lg:col-span-2`}>
-                    <div className="mb-4">
-                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Mastered Activity</h3>
-                        <p className="text-sm text-slate-500">Mastered words over time</p>
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Learning Velocity</h3>
+                            <p className="text-sm text-slate-500">Words mastered over time</p>
+                        </div>
+                        {/* Badge removed as requested */}
+
                     </div>
-                    <div className="h-64 w-full">
+                    <div className="flex-1 w-full min-h-[240px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.recent_activity.slice(-7)} margin={{ left: -20, right: 20, top: 10, bottom: 0 }}>
+                            <AreaChart data={processedMasteredActivity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="masteredGradient" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="0%" stopColor="#0A56C8" stopOpacity={0.4} />
                                         <stop offset="100%" stopColor="#0A56C8" stopOpacity={0.05} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis
-                                    dataKey="date"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#94a3b8', fontSize: 10 }}
-                                    tickFormatter={(val) => new Date(val).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-                                    minTickGap={0}
-                                    interval={0} // Force show all ticks
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#94a3b8', fontSize: 10 }}
-                                    allowDecimals={false} // Prevent 0.5, 1.5 etc
-                                />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                                <XAxis dataKey="date" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} tickFormatter={(value) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} dy={10} tickCount={7} />
+                                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} tickCount={5} />
                                 <Tooltip
-                                    cursor={{ stroke: '#0A56C8', strokeWidth: 1, strokeDasharray: '3 3' }}
-                                    content={({ active, payload, label }) => {
-                                        if (active && payload && payload.length) {
-                                            return (
-                                                <div className="bg-slate-900/95 backdrop-blur-sm text-white text-xs p-3 rounded-xl shadow-xl border border-slate-800">
-                                                    <div className="font-bold mb-2 text-slate-300">
-                                                        {label ? new Date(label).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-2 h-2 rounded-full bg-[#0A56C8] shadow-[0_0_8px_rgba(10,86,200,0.6)]" />
-                                                        <span className="text-slate-300">Mastered:</span>
-                                                        <span className="font-mono font-bold text-blue-300 text-sm">
-                                                            {payload[0].value}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            );
-                                        }
-                                        return null;
-                                    }}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    labelFormatter={(value) => new Date(value).toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' })}
                                 />
                                 <Area
-                                    name="Words Mastered"
                                     type="monotone"
                                     dataKey="mastered"
                                     stroke="#0A56C8"
                                     strokeWidth={3}
                                     fill="url(#masteredGradient)"
-                                    dot={{ fill: '#0A56C8', strokeWidth: 2, r: 4, stroke: '#fff' }}
-                                    activeDot={{ r: 6, fill: '#0A56C8', stroke: '#fff', strokeWidth: 2 }}
+                                    activeDot={{ r: 6, strokeWidth: 2, fill: '#0A56C8', stroke: '#fff' }}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -212,162 +223,168 @@ export default function VocabularyStatsSection({ stats, isLoading, period, timez
                 </div>
             </div>
 
-            {/* ROW 2: Part of Speech (Modern Horizontal Bar) */}
-            <div className={cardStyle}>
-                <div className="mb-4 flex items-center justify-between">
-                    <div>
-                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Part of Speech</h3>
-                        <p className="text-sm text-slate-500">Grammar distribution</p>
-                    </div>
-                    {/* Optional: Add a subtle badge or total count if needed */}
-                </div>
-                {/* Dynamic height based on data length */}
-                <div style={{ height: Math.max(300, (stats?.by_part_of_speech?.length || 0) * 50) }} className="w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                            data={stats.by_part_of_speech}
-                            layout="vertical"
-                            margin={{ left: 10, right: 50, top: 10, bottom: 10 }}
-                        >
-                            <defs>
-                                <linearGradient id="posGradient" x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stopColor="#3b82f6" />
-                                    <stop offset="100%" stopColor="#2563eb" />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                            <XAxis
-                                type="number"
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }}
-                                tickCount={10}
-                                allowDecimals={false}
-                            />
-                            <YAxis
-                                dataKey="label"
-                                type="category"
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: '#475569', fontSize: 13, fontWeight: 600 }}
-                                width={100}
-                            />
-                            <Tooltip
-                                cursor={{ fill: '#f8fafc', radius: 8 }}
-                                content={({ active, payload }) => {
-                                    if (active && payload && payload.length) {
-                                        const data = payload[0].payload;
-                                        return (
-                                            <div className="bg-slate-900 text-white text-xs p-3 rounded-xl shadow-xl border border-slate-700">
-                                                <div className="font-bold text-sm mb-1 text-white">{data.label}</div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-blue-400" />
-                                                    <span className="text-slate-300">Count:</span>
-                                                    <span className="font-bold text-white">{data.count}</span>
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                }}
-                            />
-                            <Bar
-                                dataKey="count"
-                                fill="url(#posGradient)"
-                                radius={[0, 100, 100, 0]}
-                                barSize={28}
-                                animationDuration={1000}
-                            >
-                                <LabelList
-                                    dataKey="count"
-                                    position="right"
-                                    fill="#64748b"
-                                    fontSize={12}
-                                    fontWeight={700}
-                                    offset={10}
-                                />
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-
-            {/* ROW 3: (7) Improvement Zone & (New) Vocabulary Heatmap */}
+            {/* ROW 3: Heatmap & Improvement Zone */}
             <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
 
                 {/* Vocabulary Heatmap (Calendar Grid) - Spans 4 cols */}
                 <div className={`${cardStyle} lg:col-span-4`}>
-                    <div className="flex items-start justify-between mb-6">
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Daily Vocabulary Added</h3>
-                            <p className="text-sm text-slate-500">2026 Consistency</p>
+                    {/* MOBILE VERSION (High-Fidelity, Horizontal Scroll) */}
+                    <div className="lg:hidden">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900 tracking-tight">Vocabulary Heatmap</h3>
+                                <p className="text-sm text-slate-500">2026 Consistency</p>
+                            </div>
+                            {/* Legend - Mobile */}
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                <span>Less</span>
+                                <div className="w-2.5 h-2.5 bg-slate-100 rounded-[2px]" />
+                                <div className="w-2.5 h-2.5 bg-[#93c5fd] rounded-[2px]" />
+                                <div className="w-2.5 h-2.5 bg-[#3b82f6] rounded-[2px]" />
+                                <div className="w-2.5 h-2.5 bg-[#1e3a8a] rounded-[2px]" />
+                                <span>More</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                            <span>Less</span>
-                            <div className="w-3 h-3 bg-slate-100 rounded-sm" />
-                            <div className="w-3 h-3 bg-[#0A56C8]/30 rounded-sm" />
-                            <div className="w-3 h-3 bg-[#0A56C8]/60 rounded-sm" />
-                            <div className="w-3 h-3 bg-[#0A56C8] rounded-sm" />
-                            <span>More</span>
+
+                        {/* Scrollable Container */}
+                        <div className="overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+                            <div className="min-w-[600px]">
+                                {/* Days Header (1-31) */}
+                                <div className="flex gap-1 mb-2 pl-12">
+                                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                        <div key={day} className="flex-1 text-[9px] text-slate-300 font-medium text-center">
+                                            {day}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Month Rows */}
+                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, monthIdx) => {
+                                    const daysInMonth = new Date(2026, monthIdx + 1, 0).getDate();
+                                    return (
+                                        <div key={month} className="flex items-center gap-1 mb-2">
+                                            <div className="w-10 text-[11px] font-bold text-slate-700 shrink-0">
+                                                {month}
+                                            </div>
+                                            {Array.from({ length: 31 }, (_, dayIdx) => {
+                                                const day = dayIdx + 1;
+                                                const isValidDay = day <= daysInMonth;
+                                                const year = 2026;
+                                                const dateString = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                                                const dayData = stats?.daily_heatmap?.find((d: any) => d.date === dateString);
+                                                const count = dayData?.count || 0;
+
+                                                // Monochromatic Blue Scale
+                                                let colorClass = 'bg-slate-100';
+                                                if (count > 0) {
+                                                    if (count >= 10) colorClass = 'bg-[#1e3a8a]'; // Deep Royal
+                                                    else if (count >= 5) colorClass = 'bg-[#2563eb]'; // Royal Blue
+                                                    else if (count >= 3) colorClass = 'bg-[#60a5fa]'; // Lighter Blue
+                                                    else colorClass = 'bg-[#dbeafe]'; // Very Light Blue
+                                                }
+
+                                                // Tooltip Content for this day
+                                                const tooltipContent = (
+                                                    <div className="text-center">
+                                                        <div className="font-bold mb-1 text-blue-200">
+                                                            {month} {day}, {year}
+                                                        </div>
+                                                        <div className="text-white font-black text-lg">
+                                                            {count} <span className="text-xs font-normal text-slate-400">words</span>
+                                                        </div>
+                                                    </div>
+                                                );
+
+                                                return (
+                                                    <div
+                                                        key={dayIdx}
+                                                        onClick={(e) => isValidDay && handleTap(e, tooltipContent)}
+                                                        className={`flex-1 aspect-square rounded-[3px] ${isValidDay ? colorClass : 'bg-transparent'} ${isValidDay ? 'active:scale-90 transition-transform cursor-pointer' : ''}`}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex-1 w-full">
-                        <div className="w-full">
-                            {/* Days Header (1-31) */}
-                            <div className="flex gap-1 mb-1 pl-10">
-                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                                    <div key={day} className="flex-1 text-[8px] text-slate-400 text-center font-medium">
-                                        {day}
-                                    </div>
-                                ))}
+                    {/* DESKTOP VERSION (Original) */}
+                    <div className="hidden lg:block">
+                        <div className="flex items-start justify-between mb-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900 tracking-tight">Vocabulary Heatmap</h3>
+                                <p className="text-sm text-slate-500">2026 Consistency</p>
                             </div>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                <span>Less</span>
+                                <div className="w-3 h-3 bg-slate-100 rounded-sm" />
+                                <div className="w-3 h-3 bg-[#0A56C8]/30 rounded-sm" />
+                                <div className="w-3 h-3 bg-[#0A56C8]/60 rounded-sm" />
+                                <div className="w-3 h-3 bg-[#0A56C8] rounded-sm" />
+                                <span>More</span>
+                            </div>
+                        </div>
 
-                            {/* Months Rows */}
-                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, monthIdx) => {
-                                const daysInMonth = new Date(2026, monthIdx + 1, 0).getDate();
-
-                                return (
-                                    <div key={month} className="flex items-center gap-1 mb-1">
-                                        <div className="w-8 text-[10px] text-slate-500 font-semibold shrink-0">
-                                            {month}
+                        <div className="flex-1 w-full">
+                            <div className="w-full">
+                                {/* Days Header (1-31) */}
+                                <div className="flex gap-1 mb-1 pl-10">
+                                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                        <div key={day} className="flex-1 text-[8px] text-slate-400 text-center font-medium">
+                                            {day}
                                         </div>
-                                        {Array.from({ length: 31 }, (_, dayIdx) => {
-                                            const day = dayIdx + 1;
-                                            const isValidDay = day <= daysInMonth;
+                                    ))}
+                                </div>
 
-                                            // Format date as YYYY-MM-DD
-                                            const year = 2026;
-                                            const dateString = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                {/* Months Rows */}
+                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, monthIdx) => {
+                                    const daysInMonth = new Date(2026, monthIdx + 1, 0).getDate();
 
-                                            const dayData = stats.daily_heatmap?.find((d: any) => d.date === dateString);
-                                            const count = dayData?.count || 0;
+                                    return (
+                                        <div key={month} className="flex items-center gap-1 mb-1">
+                                            <div className="w-8 text-[10px] text-slate-500 font-semibold shrink-0">
+                                                {month}
+                                            </div>
+                                            {Array.from({ length: 31 }, (_, dayIdx) => {
+                                                const day = dayIdx + 1;
+                                                const isValidDay = day <= daysInMonth;
 
-                                            let colorClass = 'bg-slate-100'; // Default visible empty cell
-                                            if (count > 0) {
-                                                if (count >= 10) colorClass = 'bg-[#0A56C8]';
-                                                else if (count >= 5) colorClass = 'bg-[#0A56C8]/80';
-                                                else if (count >= 3) colorClass = 'bg-[#0A56C8]/60';
-                                                else colorClass = 'bg-[#0A56C8]/30';
-                                            }
+                                                // Format date as YYYY-MM-DD
+                                                const year = 2026;
+                                                const dateString = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-                                            return (
-                                                <div key={dayIdx} className={`flex-1 aspect-square rounded-[3px] relative group transition-all ${isValidDay ? colorClass : 'bg-transparent'} ${isValidDay ? 'hover:ring-2 hover:ring-slate-400/50 cursor-default' : ''}`}>
-                                                    {isValidDay && (
-                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
-                                                            <div className="bg-slate-900 text-white text-[10px] px-2 py-1.5 rounded-md shadow-xl whitespace-nowrap">
-                                                                <div className="font-bold">{count} words</div>
-                                                                <div className="text-slate-300 font-medium">{month} {day}, {year}</div>
+                                                const dayData = stats.daily_heatmap?.find((d: any) => d.date === dateString);
+                                                const count = dayData?.count || 0;
+
+                                                let colorClass = 'bg-slate-100'; // Default visible empty cell
+                                                if (count > 0) {
+                                                    if (count >= 10) colorClass = 'bg-[#0A56C8]';
+                                                    else if (count >= 5) colorClass = 'bg-[#0A56C8]/80';
+                                                    else if (count >= 3) colorClass = 'bg-[#0A56C8]/60';
+                                                    else colorClass = 'bg-[#0A56C8]/30';
+                                                }
+
+                                                return (
+                                                    <div key={dayIdx} className={`flex-1 aspect-square rounded-[3px] relative group transition-all ${isValidDay ? colorClass : 'bg-transparent'} ${isValidDay ? 'hover:ring-2 hover:ring-slate-400/50 cursor-default' : ''}`}>
+                                                        {isValidDay && (
+                                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+                                                                <div className="bg-slate-900 text-white text-[10px] px-2 py-1.5 rounded-md shadow-xl whitespace-nowrap">
+                                                                    <div className="font-bold">{count} words</div>
+                                                                    <div className="text-slate-300 font-medium">{month} {day}, {year}</div>
+                                                                </div>
+                                                                <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-slate-900 absolute left-1/2 -translate-x-1/2 top-full"></div>
                                                             </div>
-                                                            <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-slate-900 absolute left-1/2 -translate-x-1/2 top-full"></div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                );
-                            })}
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -411,44 +428,55 @@ export default function VocabularyStatsSection({ stats, isLoading, period, timez
 
             </div>
 
-            {/* ROW 4: Due for Review (Moved from top) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <ReviewCard
-                    label="Overdue"
-                    value={stats.due_for_review.overdue}
-                    color="rose"
-                    icon={AlertCircle}
-                    description="Review immediately!"
-                    onClick={() => handleReviewClick('overdue', 'Overdue Vocabulary')}
-                />
-                <ReviewCard
-                    label="Today"
-                    value={stats.due_for_review.today}
-                    color="amber"
-                    icon={Calendar}
-                    description="Keep the streak!"
-                    onClick={() => handleReviewClick('today', 'Review Due Today')}
-                />
-                <ReviewCard
-                    label="Soon (7 Days)"
-                    value={stats.due_for_review.upcoming_7_days}
-                    color="blue"
-                    icon={Clock}
-                    description="Prepare ahead"
-                    onClick={() => handleReviewClick('soon', 'Upcoming Reviews')}
-                />
+            {/* ROW 4: Due for Review (Bento Grid Layout) */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
+                {/* Overdue: Spans 2 cols on mobile, 1 on desktop */}
+                <div className="col-span-2 md:col-span-1 h-full">
+                    <ReviewCard
+                        label="Overdue"
+                        value={stats.due_for_review.overdue}
+                        color="rose"
+                        icon={AlertCircle}
+                        description="Review immediately"
+                        onClick={() => handleReviewClick('overdue', 'Overdue Vocabulary')}
+                    />
+                </div>
+                {/* Today: 1 col */}
+                <div className="col-span-1 h-full">
+                    <ReviewCard
+                        label="Today"
+                        value={stats.due_for_review.today}
+                        color="amber"
+                        icon={Calendar}
+                        description="Keep streak"
+                        onClick={() => handleReviewClick('today', 'Review Due Today')}
+                    />
+                </div>
+                {/* Soon: 1 col */}
+                <div className="col-span-1 h-full">
+                    <ReviewCard
+                        label="Soon"
+                        value={stats.due_for_review.upcoming_7_days}
+                        color="blue"
+                        icon={Clock}
+                        description="7 Days"
+                        onClick={() => handleReviewClick('soon', 'Upcoming Reviews')}
+                    />
+                </div>
             </div>
 
             {/* Drill Down Modal */}
-            {drillType && (
-                <DrillDownModal
-                    type={drillType}
-                    value={drillValue || ''}
-                    label={drillLabel}
-                    timezone={timezone}
-                    onClose={() => setDrillType(null)}
-                />
-            )}
+            {
+                drillType && (
+                    <DrillDownModal
+                        type={drillType}
+                        value={drillValue || ''}
+                        label={drillLabel}
+                        timezone={timezone}
+                        onClose={() => setDrillType(null)}
+                    />
+                )
+            }
         </motion.div>
     );
 }
@@ -461,38 +489,55 @@ function ReviewCard({ label, value, color, icon: Icon, description, onClick }: {
     description: string;
     onClick?: () => void;
 }) {
-    const colorStyles = {
-        rose: 'bg-rose-50 text-rose-600 border-rose-100 group-hover:bg-rose-100 group-hover:border-rose-200',
-        amber: 'bg-amber-50 text-amber-600 border-amber-100 group-hover:bg-amber-100 group-hover:border-amber-200',
-        blue: 'bg-blue-50 text-blue-600 border-blue-100 group-hover:bg-blue-100 group-hover:border-blue-200',
+    // High-Fidelity Color Palettes (Vibrant Text on White)
+    const styles = {
+        rose: {
+            text: 'text-[#f43f5e]', // Vibrant Red
+            bgIcon: 'bg-[#fff1f2]', // Very light red
+            border: 'border-rose-100 hover:border-rose-200',
+            glow: 'group-hover:shadow-[0_8px_20px_-4px_rgba(244,63,94,0.15)]'
+        },
+        amber: {
+            text: 'text-[#f59e0b]', // Vibrant Amber
+            bgIcon: 'bg-[#fffbeb]', // Very light amber
+            border: 'border-amber-100 hover:border-amber-200',
+            glow: 'group-hover:shadow-[0_8px_20px_-4px_rgba(245,158,11,0.15)]'
+        },
+        blue: {
+            text: 'text-[#3b82f6]', // Vibrant Blue
+            bgIcon: 'bg-[#eff6ff]', // Very light blue
+            border: 'border-blue-100 hover:border-blue-200',
+            glow: 'group-hover:shadow-[0_8px_20px_-4px_rgba(59,130,246,0.15)]'
+        }
     };
 
-    const textStyles = {
-        rose: 'text-rose-600',
-        amber: 'text-amber-600',
-        blue: 'text-blue-600',
-    };
+    const s = styles[color];
 
     return (
         <div
             onClick={onClick}
-            className={`p-4 rounded-2xl border transition-all flex flex-col justify-between h-full cursor-pointer group ${colorStyles[color]} hover:shadow-md hover:-translate-y-1`}
+            className={`
+                relative overflow-hidden group cursor-pointer transition-all duration-300
+                bg-white p-6 rounded-[24px] border border-transparent shadow-[0_2px_12px_-2px_rgba(0,0,0,0.03)]
+                ${s.border} ${s.glow} hover:-translate-y-1 h-full flex flex-col justify-between
+            `}
         >
-            <div className="flex justify-between items-start mb-2">
-                <div className={`p-2 bg-white/60 rounded-xl ${textStyles[color]} group-hover:bg-white`}>
-                    <Icon size={18} strokeWidth={2.5} />
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-2.5 rounded-2xl ${s.bgIcon} ${s.text} transition-transform group-hover:scale-110`}>
+                    <Icon size={20} strokeWidth={2.5} />
                 </div>
-                <div className={`text-3xl font-black tracking-tight ${textStyles[color]}`}>
+                <div className={`text-4xl font-black tracking-tighter ${s.text}`}>
                     {value}
                 </div>
             </div>
+
             <div>
-                <div className={`text-xs font-bold uppercase tracking-wider opacity-80 ${textStyles[color]}`}>
+                <div className={`text-[11px] font-bold uppercase tracking-widest opacity-90 mb-0.5 ${s.text}`}>
                     {label}
                 </div>
-                <p className={`text-[10px] font-medium opacity-60 mt-0.5 ${textStyles[color]}`}>
+                <div className="text-[10px] font-medium text-slate-400">
                     {description}
-                </p>
+                </div>
             </div>
         </div>
     );

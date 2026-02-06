@@ -3,8 +3,8 @@
 export type StatsPeriod = '7d' | '30d' | 'year' | 'all';
 
 export const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
-    { value: '7d', label: 'Last 7 Days' },
-    { value: '30d', label: 'Last 30 Days' },
+    { value: '7d', label: '7 Days' },
+    { value: '30d', label: '30 Days' },
     { value: 'year', label: 'This Year' },
     { value: 'all', label: 'All Time' },
 ];

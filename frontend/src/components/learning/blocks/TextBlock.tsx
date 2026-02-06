@@ -22,7 +22,7 @@ export default function TextBlock({ block }: TextBlockProps) {
 
     return (
         <div
-            className={cn("prose prose-slate max-w-none prose-lg animate-in fade-in slide-in-from-right-4", styles[style as keyof typeof styles] || styles.normal)}
+            className={cn("prose prose-slate max-w-none prose-base md:prose-lg animate-in fade-in slide-in-from-right-4", styles[style as keyof typeof styles] || styles.normal)}
             dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         />
     );

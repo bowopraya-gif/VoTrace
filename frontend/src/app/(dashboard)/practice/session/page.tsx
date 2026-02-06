@@ -428,18 +428,20 @@ function PracticeSessionContent() {
                 </div>
 
                 {/* Middle Row: Info (Centered) */}
-                <div className="flex justify-center items-center gap-8 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-y border-slate-50 py-3">
-                    <div className="flex items-center gap-2">
-                        <Play size={10} className="fill-current" />
-                        <span>Started: {formatStartTime(startTime)}</span>
-                    </div>
-                    <div className="w-px h-4 bg-slate-200" />
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-amber-400 blur-[2px] opacity-20" />
-                            <Target size={10} className="text-amber-500" />
+                {/* Middle Row: Info (Centered) */}
+                <div className="flex justify-center items-center gap-12 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-y border-slate-50 py-4">
+                    <div className="text-center">
+                        <div className="text-[10px] text-slate-300 mb-1">STARTED</div>
+                        <div className="text-slate-500 font-mono text-sm">
+                            {formatStartTime(startTime)}
                         </div>
-                        <span>Speed: {currentIndex > 0 ? Math.round(((questionStartTime - startTime) / 1000) / currentIndex) : 0}s/question</span>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100" />
+                    <div className="text-center">
+                        <div className="text-[10px] text-slate-300 mb-1">SPEED</div>
+                        <div className="text-slate-500 font-mono text-sm">
+                            {currentIndex > 0 ? Math.round(((questionStartTime - startTime) / 1000) / currentIndex) : 0}s/question
+                        </div>
                     </div>
                 </div>
 

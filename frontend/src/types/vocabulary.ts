@@ -30,6 +30,7 @@ export interface Vocabulary {
     audio_status?: 'pending' | 'generating' | 'ready' | 'failed' | null;
     created_at?: string;
     updated_at?: string;
+    mastery_score?: number;
 }
 
 export const PART_OF_SPEECH_OPTIONS: { value: PartOfSpeech; label: string }[] = [
