@@ -1,7 +1,7 @@
 "use client";
 
 import { PRACTICE_MODES } from '@/types/practice';
-import { ListChecks, Keyboard, Headphones, Shuffle } from 'lucide-react';
+import { ListChecks, Keyboard, Headphones, Shuffle, Grid2X2 } from 'lucide-react';
 import Link from 'next/link';
 
 const ICON_MAP: Record<string, any> = {
@@ -9,6 +9,7 @@ const ICON_MAP: Record<string, any> = {
     'typing': Keyboard,
     'listening': Headphones,
     'mixed': Shuffle,
+    'matching': Grid2X2,
 };
 
 const COLOR_MAP: Record<string, string> = {
@@ -16,6 +17,7 @@ const COLOR_MAP: Record<string, string> = {
     'purple': 'text-purple-600 bg-purple-50 border-purple-200 hover:border-purple-300 hover:shadow-purple-100',
     'emerald': 'text-emerald-600 bg-emerald-50 border-emerald-200 hover:border-emerald-300 hover:shadow-emerald-100',
     'orange': 'text-orange-600 bg-orange-50 border-orange-200 hover:border-orange-300 hover:shadow-orange-100',
+    'teal': 'text-teal-600 bg-teal-50 border-teal-200 hover:border-teal-300 hover:shadow-teal-100',
 };
 
 export default function PracticeModeCards() {

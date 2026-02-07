@@ -187,8 +187,28 @@ class PracticeService
                 $questions[] = $this->generateTypingQuestion($vocab, $direction);
             } elseif ($mode === 'listening') {
                 $questions[] = $this->generateListeningQuestion($vocab, $direction);
+            } elseif ($mode === 'matching') {
+                // Matching mode is handled separately via chunking, but if we are here it means generic loop.
+                // Actually matching mode should break this loop structure.
+                // Let's refactor startSession slightly to handle matching separately.
             } else {
                 $questions[] = $this->generateMultipleChoiceQuestion($vocab, $direction, $pool);
+            }
+        }
+        
+        if ($mode === 'matching') {
+            // Reset questions and generate chunks
+            $questions = [];
+            $vocabularyChunks = $vocabulary->chunk(5); // 5 pairs per round (10 cards)
+            
+            foreach ($vocabularyChunks as $chunk) {
+                // Allow any chunk size (even 1 pair) to ensure no words are skipped
+                $questions[] = $this->generateMatchingRound($chunk, $direction);
+            }
+            
+            // If no valid rounds were generated (e.g. empty vocabulary), return error
+            if (empty($questions)) {
+                return ['error' => 'No vocabulary available for matching mode.'];
             }
         }
 
@@ -235,6 +255,42 @@ class PracticeService
             'learning_status' => $vocab->learning_status,
             'part_of_speech' => $vocab->part_of_speech,
             'example_sentence' => $finalSentence, // Correct language context
+        ];
+    }
+
+    /**
+     * Generate a matching question round (Jumbled Grid)
+     */
+    private function generateMatchingRound($vocabularies, string $direction): array
+    {
+        $items = collect();
+        
+        foreach ($vocabularies as $vocab) {
+            // Add source word
+            $items->push([
+                'id' => $vocab->uuid . '_source',
+                'pair_id' => $vocab->uuid,
+                'text' => $direction === 'en_to_id' ? $vocab->english_word : $vocab->translation,
+                'type' => 'source',
+            ]);
+            // Add target word
+            $items->push([
+                'id' => $vocab->uuid . '_target',
+                'pair_id' => $vocab->uuid,
+                'text' => $direction === 'en_to_id' ? $vocab->translation : $vocab->english_word,
+                'type' => 'target',
+            ]);
+        }
+        
+        // Return 50% mixed with 50% matched for SRS weighting reference later, 
+        // but here we just return the structure.
+        
+        return [
+            'id' => \Illuminate\Support\Str::uuid()->toString(), // Unique ID for React Key
+            'type' => 'matching',
+            'pair_count' => $vocabularies->count(),
+            'items' => $items->shuffle()->values()->toArray(), // Jumbled Grid
+            'vocabulary_ids' => $vocabularies->pluck('uuid')->toArray(),
         ];
     }
 
@@ -583,6 +639,63 @@ class PracticeService
             'status' => 'success',
             'srs_update' => $srsResult
         ];
+    }
+
+    /**
+     * Submit a batch of matching answers
+     */
+    public function submitMatchingBatch(User $user, array $data): array
+    {
+        $session = PracticeSession::where('uuid', $data['session_id'])
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $processedCount = 0;
+        $correctCount = 0;
+
+        foreach ($data['results'] as $result) {
+            $vocab = Vocabulary::where('uuid', $result['vocabulary_id'])
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$vocab) continue; // Skip if not found
+
+            PracticeAttempt::create([
+                'practice_session_id' => $session->id,
+                'vocabulary_id' => $vocab->id,
+                'user_answer' => $result['is_correct'] ? 'matched' : 'mismatched',
+                'correct_answer' => 'matched',
+                'is_correct' => $result['is_correct'],
+                'time_spent_ms' => $result['time_spent_ms'],
+            ]);
+
+            // Update session stats
+            if ($result['is_correct']) {
+                $session->increment('correct_answers');
+                $correctCount++;
+            } else {
+                $session->increment('wrong_answers');
+            }
+
+            // SRS with 50% weight for matching mode
+            $this->srsService->processAnswer(
+                $vocab,
+                $result['is_correct'],
+                $result['time_spent_ms'],
+                0, // no hints
+                0.5 // SRS weight multiplier (50%)
+            );
+            
+            $processedCount++;
+        }
+
+        // Update accuracy (re-fetch freshness handled by eloquent increments usually, but simple calculation is safer)
+        // Refresh session to get latest counts from simple increments
+        $session->refresh();
+        $total = $session->correct_answers + $session->wrong_answers;
+        $session->update(['accuracy' => $total > 0 ? ($session->correct_answers / $total) * 100 : 0]);
+
+        return ['status' => 'success', 'processed' => $processedCount];
     }
 
     /**

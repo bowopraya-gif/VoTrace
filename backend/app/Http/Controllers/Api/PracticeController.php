@@ -26,6 +26,7 @@ class PracticeController extends Controller
             'direction' => 'nullable|string',
             'question_count' => 'nullable|integer',
             'filters' => 'nullable|array',
+            'smart_selection' => 'nullable|boolean', // Added smart_selection
         ]);
 
         return response()->json($service->startSession($request->user(), $validated));
@@ -61,6 +62,19 @@ class PracticeController extends Controller
         ]);
 
         return response()->json($service->submitAnswer($request->user(), $validated));
+    }
+
+    public function answerBatch(Request $request, PracticeService $service)
+    {
+        $validated = $request->validate([
+            'session_id' => 'required|exists:practice_sessions,uuid',
+            'results' => 'required|array|min:1',
+            'results.*.vocabulary_id' => 'required|exists:vocabularies,uuid',
+            'results.*.is_correct' => 'required|boolean',
+            'results.*.time_spent_ms' => 'required|integer',
+        ]);
+
+        return response()->json($service->submitMatchingBatch($request->user(), $validated));
     }
 
     public function complete(Request $request, PracticeService $service)

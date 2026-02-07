@@ -21,7 +21,7 @@ class SpacedRepetitionService
     /**
      * Process an answer and update vocabulary stats
      */
-    public function processAnswer(Vocabulary $vocab, bool $isCorrect, int $timeMs = 0, int $hintPenalty = 0, string $timezone = 'UTC'): array
+    public function processAnswer(Vocabulary $vocab, bool $isCorrect, int $timeMs = 0, int $hintPenalty = 0, float $weight = 1.0, string $timezone = 'UTC'): array
     {
         $oldLevel = $vocab->srs_level;
         $difficultyScore = $vocab->difficulty_score ?? 50; // Initialize if null
@@ -32,11 +32,11 @@ class SpacedRepetitionService
         // If wrong: increase difficulty significantly
         // If correct: decrease difficulty slightly
         if (!$isCorrect) {
-            $difficultyScore = min(100, $difficultyScore + 10);
+            $difficultyScore = min(100, $difficultyScore + (10 * $weight));
         } else {
             // Faster answer = easier
             $timeFactor = max(0, (3000 - $timeMs) / 100); // Bonus for answers under 3s
-            $difficultyScore = max(0, $difficultyScore - 2 - ($timeFactor * 0.5));
+            $difficultyScore = max(0, $difficultyScore - (2 * $weight) - ($timeFactor * 0.5 * $weight));
         }
 
         // 2. Apply Hint Penalty to Ease Factor
@@ -48,15 +48,42 @@ class SpacedRepetitionService
         // Existing logic for SRS level and interval calculation
         if ($isCorrect) {
             // Move up one level (max 5)
+            // Weight affects probability of level up? No, standard SRS doesn't weight easy/hard modes usually this way.
+            // But user requested "half the effect".
+            // If weight is 0.5, maybe we shouldn't increase interval as much?
+            // "SRS Weight: 50% impact compared to other modes" 
+            
             $newLevel = min($oldLevel + 1, 5);
             
             // Calculate interval using ease factor
             $baseInterval = self::BASE_INTERVALS[$newLevel] ?? 30;
-            $newInterval = (int) round($baseInterval * $easeFactor);
+            
+            // Apply weight to the interval multiplier? 
+            // Or apply weight to Ease Factor changes?
+            // Let's apply weight to the interval growth.
+            // If weight is 0.5, the interval grows 50% less? 
+            // Actually, simply scaling the final interval might be safest.
+            
+            $calculatedInterval = (int) round($baseInterval * $easeFactor);
+            
+            // If weight < 1, damp the interval increase vs previous interval
+            // But here we are just setting absolute values from table.
+            // Let's just scale the interval directly.
+            if ($weight < 1.0) {
+                 // Blend between previous interval and new calculated interval
+                 $newInterval = (int) round($currentInterval + (($calculatedInterval - $currentInterval) * $weight));
+                 // Ensure at least 1 day increase if it was supposed to increase
+                 if ($newInterval <= $currentInterval && $calculatedInterval > $currentInterval) {
+                     $newInterval = $currentInterval + 1;
+                 }
+            } else {
+                 $newInterval = $calculatedInterval;
+            }
+
             
             // Bonus for fast correct answers (< 3 seconds)
             if ($timeMs > 0 && $timeMs < 3000) {
-                $easeFactor = min($easeFactor + 0.1, 3.0); // Max ease 3.0
+                $easeFactor = min($easeFactor + (0.1 * $weight), 3.0); // Max ease 3.0
             }
             
             // Update consecutive correct
@@ -64,11 +91,15 @@ class SpacedRepetitionService
             
         } else {
             // Wrong answer: reset to level 1 (not 0, to give a chance)
+            // If weight is low, maybe punishment is less severe?
+            // Let's keep punishment standard for now, or maybe reduce level drop?
+            // User said "50% impact". 
+            
             $newLevel = max($oldLevel - 2, 1);
             $newInterval = 1; // Review again tomorrow
             
             // Decrease ease factor (makes intervals shorter)
-            $easeFactor = max($easeFactor - 0.2, 1.3); // Min ease 1.3
+            $easeFactor = max($easeFactor - (0.2 * $weight), 1.3); // Min ease 1.3
             
             // Reset consecutive correct
             $consecutiveCorrect = 0;

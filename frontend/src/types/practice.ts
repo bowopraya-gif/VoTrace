@@ -1,10 +1,10 @@
-export type PracticeMode = 'multiple_choice' | 'typing' | 'listening' | 'mixed';
+export type PracticeMode = 'multiple_choice' | 'typing' | 'listening' | 'matching' | 'mixed';
 
 export interface PracticeModeConfig {
     mode: PracticeMode;
     label: string;
     description: string;
-    color: 'blue' | 'purple' | 'emerald' | 'orange';
+    color: 'blue' | 'purple' | 'emerald' | 'orange' | 'teal';
 }
 
 export const PRACTICE_MODES: PracticeModeConfig[] = [
@@ -25,6 +25,12 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
         label: 'Listening Mode',
         description: 'Listen to the pronunciation and select the word.',
         color: 'orange'
+    },
+    {
+        mode: 'matching',
+        label: 'Vocabulary Matching',
+        description: 'Match words with their translations in a jumbled grid!',
+        color: 'teal'
     },
     {
         mode: 'mixed',
@@ -118,4 +124,26 @@ export interface ListeningQuestion {
     correct_answer: string;
     learning_status: string;
     part_of_speech?: string;
+}
+
+// Matching Mode Types
+export interface MatchingItem {
+    id: string;
+    pair_id: string;
+    text: string;
+    type: 'source' | 'target';
+}
+
+export interface MatchingQuestion {
+    id: string; // UUID for React Key
+    type: 'matching';
+    pair_count: number;
+    items: MatchingItem[];
+    vocabulary_ids: string[];
+}
+
+export interface MatchingResult {
+    vocabulary_id: string;
+    is_correct: boolean;
+    time_spent_ms: number;
 }

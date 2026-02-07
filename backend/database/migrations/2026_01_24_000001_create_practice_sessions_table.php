@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('practice_sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('mode', ['multiple_choice', 'typing', 'listening', 'mixed']);
+            $table->enum('mode', ['multiple_choice', 'typing', 'listening', 'mixed', 'matching']);
             $table->enum('direction', ['en_to_id', 'id_to_en'])->default('en_to_id');
             $table->integer('total_questions');
             $table->integer('correct_answers')->default(0);

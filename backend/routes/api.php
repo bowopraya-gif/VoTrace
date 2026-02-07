@@ -56,6 +56,7 @@ Route::middleware(['auth:sanctum', 'no-cache'])->group(function () {
     Route::post('/practice/count', [PracticeController::class, 'count']);
     Route::post('/practice/start', [PracticeController::class, 'start']);
     Route::post('/practice/answer', [PracticeController::class, 'answer']);
+    Route::post('/practice/answer-batch', [PracticeController::class, 'answerBatch']);
     Route::post('/practice/complete', [PracticeController::class, 'complete']);
     Route::get('/practice/session/{id}', [PracticeController::class, 'show']);
     

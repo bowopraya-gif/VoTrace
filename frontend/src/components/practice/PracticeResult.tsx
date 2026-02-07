@@ -15,11 +15,12 @@ interface PracticeResultProps {
         id: string;
     }>;
     skippedCount?: number;
+    mode?: string; // Add mode prop
 }
 
 
 
-export default function PracticeResult({ result, wrongAnswers, skippedCount = 0 }: PracticeResultProps) {
+export default function PracticeResult({ result, wrongAnswers, skippedCount = 0, mode = 'multiple_choice' }: PracticeResultProps) {
     const { user } = useAuthStore();
     const firstName = user?.full_name?.split(' ')[0] || user?.username || 'Learner';
 
@@ -216,7 +217,7 @@ export default function PracticeResult({ result, wrongAnswers, skippedCount = 0 
                     <Home size={20} /> Back to Home
                 </Link>
                 <Link
-                    href="/practice/setup"
+                    href={`/practice/setup?mode=${mode}`}
                     className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
                 >
                     <RotateCcw size={20} /> Practice Again

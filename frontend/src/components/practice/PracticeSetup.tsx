@@ -23,8 +23,9 @@ export default function PracticeSetup() {
     const initialMode = (searchParams.get('mode') as PracticeMode) || 'multiple_choice';
 
     // Wizard State
-    // If mode is listening, skip Step 1 (Direction) because it's always Listen English -> Type English
-    const [step, setStep] = useState(initialMode === 'listening' ? 2 : 1);
+    // If mode is listening or matching, skip Step 1 (Direction)
+    const shouldSkipDirection = initialMode === 'listening' || initialMode === 'matching';
+    const [step, setStep] = useState(shouldSkipDirection ? 2 : 1);
 
     const [mode, setMode] = useState<PracticeMode>(initialMode);
 
@@ -93,6 +94,12 @@ export default function PracticeSetup() {
                 smart_selection: smartSelection
             });
 
+            if (res.data.error) {
+                alert(res.data.error);
+                setLoading(false);
+                return;
+            }
+
             // Persist session + local settings that backend doesn't store
             sessionStorage.setItem(`practice_session_${res.data.session_id}`, JSON.stringify({
                 ...res.data,
@@ -122,7 +129,8 @@ export default function PracticeSetup() {
     };
 
     const nextStep = () => setStep(s => Math.min(s + 1, 4));
-    const prevStep = () => setStep(s => Math.max(s - 1, 1));
+    // If skipping direction, min step is 2
+    const prevStep = () => setStep(s => Math.max(s - 1, (mode === 'listening' || mode === 'matching') ? 2 : 1));
 
     const modeInfo = PRACTICE_MODES.find(m => m.mode === mode) || PRACTICE_MODES[0];
     const maxQuestions = availableCount || 0;
@@ -164,17 +172,17 @@ export default function PracticeSetup() {
         );
     };
 
-    const isListening = mode === 'listening';
-    const totalSteps = isListening ? 3 : 4;
-    const displayStep = isListening ? step - 1 : step;
+    const isDirectionSkipped = mode === 'listening' || mode === 'matching';
+    const totalSteps = isDirectionSkipped ? 3 : 4;
+    const displayStep = isDirectionSkipped ? step - 1 : step;
 
     return (
-        <div className="max-w-3xl mx-auto pb-20 px-4 sm:px-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-3xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header / Progress */}
             <div className="mb-8 pt-4">
                 <div className="flex items-center justify-between mb-6">
                     <button
-                        onClick={(isListening ? step === 2 : step === 1) ? () => router.push('/practice') : prevStep}
+                        onClick={(isDirectionSkipped ? step === 2 : step === 1) ? () => router.push('/practice') : prevStep}
                         className="p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
                     >
                         <ArrowLeft size={24} />

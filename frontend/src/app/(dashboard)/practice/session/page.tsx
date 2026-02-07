@@ -4,10 +4,12 @@ import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query'; // Import QueryClient
 import api from '@/lib/api';
-import { PracticeQuestion, PracticeSessionResult, TypingQuestion as TypingQuestionType, ListeningQuestion as ListeningQuestionType, TypoTolerance } from '@/types/practice';
+import { PracticeQuestion, PracticeSessionResult, TypingQuestion as TypingQuestionType, ListeningQuestion as ListeningQuestionType, MatchingQuestion as MatchingQuestionType, MatchingResult, TypoTolerance } from '@/types/practice';
 import MultipleChoiceQuestion from '@/components/practice/MultipleChoiceQuestion';
 import TypingQuestion from '@/components/practice/TypingQuestion';
 import ListeningQuestion from '@/components/practice/ListeningQuestion';
+import { MatchingQuestion } from '@/components/practice/MatchingQuestion';
+import { MatchingRoundSkeleton } from '@/components/practice/MatchingRoundSkeleton';
 import QuestionFeedback from '@/components/practice/QuestionFeedback';
 import PracticeResult from '@/components/practice/PracticeResult';
 import { useAudioPreloader } from '@/hooks/useAudioPreloader';
@@ -23,7 +25,7 @@ function PracticeSessionContent() {
 
     const [loading, setLoading] = useState(true);
     // Allow all question types
-    const [questions, setQuestions] = useState<(PracticeQuestion | TypingQuestionType | ListeningQuestionType)[]>([]);
+    const [questions, setQuestions] = useState<(PracticeQuestion | TypingQuestionType | ListeningQuestionType | MatchingQuestionType)[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [status, setStatus] = useState<'question' | 'feedback' | 'completed'>('question');
     // Store user answer for feedback display (Typing mode needs it for coloring)
@@ -35,7 +37,8 @@ function PracticeSessionContent() {
     const [wrongAnswers, setWrongAnswers] = useState<Array<{ english: string, translation: string, id: string }>>([]);
     const [skippedCount, setSkippedCount] = useState(0);
 
-    // Session Config
+    // Matching Mode Specific State
+    const [currentRoundProgress, setCurrentRoundProgress] = useState(0);
     const [mode, setMode] = useState<string>('multiple_choice');
     const [tolerance, setTolerance] = useState<TypoTolerance>('normal');
     const [enableCloze, setEnableCloze] = useState(false);
@@ -158,9 +161,14 @@ function PracticeSessionContent() {
 
         // Submit to backend in background
         try {
+            // Matching mode uses handleMatchingComplete, so we shouldn't be here or we handle it differently
+            if (mode === 'matching') return;
+
+            const standardQuestion = currentQuestion as Exclude<typeof currentQuestion, MatchingQuestionType>;
+
             await api.post('/practice/answer', {
                 session_id: sessionId,
-                vocabulary_id: currentQuestion.vocabulary_id,
+                vocabulary_id: standardQuestion.vocabulary_id,
                 question_type: mode,
                 user_answer: answer,
                 correct_answer: correctAnswer,
@@ -172,9 +180,9 @@ function PracticeSessionContent() {
             // Track wrong answer for review
             if (!isCorrect) {
                 setWrongAnswers(prev => [...prev, {
-                    english: currentQuestion.question_text, // Context dependent
+                    english: (currentQuestion as Exclude<typeof currentQuestion, MatchingQuestionType>).question_text, // Context dependent
                     translation: correctAnswer,
-                    id: currentQuestion.vocabulary_id
+                    id: (currentQuestion as Exclude<typeof currentQuestion, MatchingQuestionType>).vocabulary_id
                 }]);
             }
 
@@ -196,6 +204,8 @@ function PracticeSessionContent() {
             console.error("Failed to submit answer", error);
         }
     }, [questions, currentIndex, mode, questionStartTime, sessionId, startTime]);
+
+
 
     // Processing guard
     const processingRef = useRef(false);
@@ -244,6 +254,7 @@ function PracticeSessionContent() {
     const handleNext = useCallback(async () => {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(prev => prev + 1);
+            setCurrentRoundProgress(0); // Reset for next round
             setStatus('question');
             setFeedback(null);
             setQuestionStartTime(Date.now());
@@ -254,6 +265,28 @@ function PracticeSessionContent() {
             finishSession();
         }
     }, [currentIndex, questions.length, finishSession]);
+
+    // Matching Mode Handler (Batched) - Moved here to avoid circular dependency with finishSession
+    const handleMatchingComplete = useCallback(async (results: MatchingResult[], totalTimeMs: number) => {
+        try {
+            await api.post('/practice/answer-batch', {
+                session_id: sessionId,
+                results: results
+            });
+
+            // Advance logic
+            if (currentIndex < questions.length - 1) {
+                setCurrentIndex(prev => prev + 1);
+                setCurrentRoundProgress(0);
+            } else {
+                finishSession();
+            }
+
+        } catch (err) {
+            console.error("Failed to submit matching batch", err);
+        }
+
+    }, [questions.length, currentIndex, sessionId, finishSession]);
 
     // Processing guard
     const [now, setNow] = useState(Date.now());
@@ -326,9 +359,17 @@ function PracticeSessionContent() {
 
         // Submit as wrong answer (skipped)
         // We can add a specific flag 'skipped' to backend if needed, for now treat as wrong
+        const standardQuestion = currentQuestion as PracticeQuestion | TypingQuestionType | ListeningQuestionType;
+
+        // If matching, we might need to skip ALL items or just handle differently. 
+        // For now preventing crash by casting, assuming skip button might be hidden or generic.
+        // Actually usually Matching mode doesn't have a simple "Skip" button for the whole round in the same way.
+        const vocabId = mode === 'matching' ? (currentQuestion as MatchingQuestionType).vocabulary_ids[0] : standardQuestion.vocabulary_id;
+        const qText = mode === 'matching' ? 'Matching Round' : standardQuestion.question_text;
+
         api.post('/practice/answer', {
             session_id: sessionId,
-            vocabulary_id: currentQuestion.vocabulary_id,
+            vocabulary_id: vocabId,
             question_type: mode,
             user_answer: 'skipped', // or null?
             correct_answer: correctAnswer,
@@ -337,9 +378,9 @@ function PracticeSessionContent() {
         }).catch(err => console.error("Failed to skip", err));
 
         setWrongAnswers(prev => [...prev, {
-            english: currentQuestion.question_text,
+            english: qText,
             translation: correctAnswer,
-            id: currentQuestion.vocabulary_id
+            id: vocabId
         }]);
     }, [questions, currentIndex, mode, questionStartTime, sessionId]);
 
@@ -364,7 +405,7 @@ function PracticeSessionContent() {
     }
 
     if (status === 'completed' && result) {
-        return <PracticeResult result={result} wrongAnswers={wrongAnswers} skippedCount={skippedCount} />;
+        return <PracticeResult result={result} wrongAnswers={wrongAnswers} skippedCount={skippedCount} mode={mode} />;
     }
 
     const currentQuestion = questions[currentIndex];
@@ -375,61 +416,75 @@ function PracticeSessionContent() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto min-h-[80vh] flex flex-col py-8 px-4">
+        <div className={`mx-auto min-h-[80vh] flex flex-col py-8 px-4 ${mode === 'matching' ? 'max-w-7xl' : 'max-w-4xl'}`}>
             {/* Header Card */}
-            <div className="bg-white rounded-[1.5rem] shadow-lg border border-slate-100 p-6 mb-8">
+            <div className="bg-white rounded-[1.5rem] shadow-lg border border-slate-100 p-6 mb-8 max-w-4xl mx-auto w-full">
 
-                {/* Top Row: Timers & Stats */}
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
-                    {/* Timers & Quit */}
-                    <div className="flex items-center gap-4 w-full md:w-auto">
+                {/* Top Row: Timers & Stats (Standard Mode Only) */}
+                {mode !== 'matching' && (
+                    <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+                        {/* Timers & Quit */}
+                        <div className="flex items-center gap-4 w-full md:w-auto">
+                            <button
+                                onClick={handleQuit}
+                                className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                title="Quit Session"
+                            >
+                                <X size={24} />
+                            </button>
+
+                            <div className="flex items-center gap-4 bg-slate-50 rounded-xl p-2 border border-slate-100">
+                                <div className="flex items-center gap-2 px-3 py-1 border-r border-slate-200">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 leading-none">Question</span>
+                                        <span className="font-mono font-bold text-slate-700">{formatTime(questionSeconds)}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 px-3 py-1">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 leading-none">Session</span>
+                                        <span className="font-mono font-bold text-slate-700">{formatTime(sessionSeconds)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Side: Simple Stats */}
+                        <div className="flex items-center gap-2">
+                            {(currentQuestion as PracticeQuestion).part_of_speech && (
+                                <div className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border bg-amber-50 text-amber-700 border-amber-200">
+                                    {(currentQuestion as PracticeQuestion).part_of_speech}
+                                </div>
+                            )}
+
+                            <div className={`
+                                    px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border
+                                    ${(currentQuestion as PracticeQuestion).learning_status === 'learning' ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}
+                                    ${(currentQuestion as PracticeQuestion).learning_status === 'review' ? 'bg-purple-50 text-purple-700 border-purple-200' : ''}
+                                    ${(currentQuestion as PracticeQuestion).learning_status === 'mastered' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ''}
+                                    ${!(currentQuestion as PracticeQuestion).learning_status ? 'bg-slate-50 text-slate-600 border-slate-100' : ''}
+                            `}>
+                                Status: {(currentQuestion as PracticeQuestion).learning_status || 'Unknown'}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Middle Row: Info (Centered) */}
+                {/* Middle Row: Info (Centered) */}
+                <div className="flex justify-center items-center gap-12 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-y border-slate-50 py-4 relative">
+
+                    {/* Quit Button (Matching Mode Only) - Absolute Left or Inline */}
+                    {mode === 'matching' && (
                         <button
                             onClick={handleQuit}
-                            className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            className="absolute -left-3 p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                             title="Quit Session"
                         >
                             <X size={24} />
                         </button>
+                    )}
 
-                        <div className="flex items-center gap-4 bg-slate-50 rounded-xl p-2 border border-slate-100">
-                            <div className="flex items-center gap-2 px-3 py-1 border-r border-slate-200">
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase font-bold text-slate-400 leading-none">Question</span>
-                                    <span className="font-mono font-bold text-slate-700">{formatTime(questionSeconds)}</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 px-3 py-1">
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase font-bold text-slate-400 leading-none">Session</span>
-                                    <span className="font-mono font-bold text-slate-700">{formatTime(sessionSeconds)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Side: Simple Stats */}
-                    <div className="flex items-center gap-2">
-                        {currentQuestion?.part_of_speech && (
-                            <div className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border bg-amber-50 text-amber-700 border-amber-200">
-                                {currentQuestion.part_of_speech}
-                            </div>
-                        )}
-
-                        <div className={`
-                             px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border
-                             ${currentQuestion?.learning_status === 'learning' ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}
-                             ${currentQuestion?.learning_status === 'review' ? 'bg-purple-50 text-purple-700 border-purple-200' : ''}
-                             ${currentQuestion?.learning_status === 'mastered' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ''}
-                             ${!currentQuestion?.learning_status ? 'bg-slate-50 text-slate-600 border-slate-100' : ''}
-                        `}>
-                            Status: {currentQuestion?.learning_status || 'Unknown'}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Middle Row: Info (Centered) */}
-                {/* Middle Row: Info (Centered) */}
-                <div className="flex justify-center items-center gap-12 text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-y border-slate-50 py-4">
                     <div className="text-center">
                         <div className="text-[10px] text-slate-300 mb-1">STARTED</div>
                         <div className="text-slate-500 font-mono text-sm">
@@ -438,32 +493,65 @@ function PracticeSessionContent() {
                     </div>
                     <div className="w-px h-8 bg-slate-100" />
                     <div className="text-center">
-                        <div className="text-[10px] text-slate-300 mb-1">SPEED</div>
+                        <div className="text-[10px] text-slate-300 mb-1">{mode === 'matching' ? 'SESSION TIME' : 'SPEED'}</div>
                         <div className="text-slate-500 font-mono text-sm">
-                            {currentIndex > 0 ? Math.round(((questionStartTime - startTime) / 1000) / currentIndex) : 0}s/question
+                            {mode === 'matching'
+                                ? formatTime(sessionSeconds)
+                                : `${currentIndex > 0 ? Math.round(((questionStartTime - startTime) / 1000) / currentIndex) : 0}s/question`
+                            }
                         </div>
                     </div>
                 </div>
 
                 {/* Bottom Row: Progress */}
-                <div className="space-y-2">
-                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden relative">
-                        <div
-                            className="h-full bg-primary rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                            style={{ width: `${((currentIndex + 1) / sessionTotal) * 100}%` }}
-                        />
-                    </div>
-                    <div className="flex justify-between items-center mt-2 px-1">
-                        <span className="text-xs font-bold text-slate-300">Start</span>
-                        <div className="text-center">
-                            <div className="text-sm font-bold text-primary">Question {currentIndex + 1}</div>
-                            <div className="text-xs font-medium text-slate-400">
-                                Progress: {currentIndex + 1}/{sessionTotal} ({Math.round(((currentIndex + 1) / sessionTotal) * 100)}%)
+                {(() => {
+                    // Progress Calculation Logic
+                    let progressPercent = 0;
+                    let progressText = '';
+                    let progressSubText = '';
+
+                    if (mode === 'matching') {
+                        // Matching Mode: Calculate Total Pairs
+                        // Sum of pair_count for ALL questions
+                        const totalPairs = questions.reduce((acc, q) => acc + ((q as MatchingQuestionType).pair_count || 0), 0);
+
+                        // Sum of pair_count for COMPLETED rounds (previous indices)
+                        const pastPairs = questions.slice(0, currentIndex).reduce((acc, q) => acc + ((q as MatchingQuestionType).pair_count || 0), 0);
+
+                        // Current Total
+                        const currentTotalProgress = pastPairs + currentRoundProgress;
+
+                        progressPercent = totalPairs > 0 ? (currentTotalProgress / totalPairs) * 100 : 0;
+                        progressText = `Pairs ${currentTotalProgress} / ${totalPairs}`;
+                        progressSubText = `Progress: ${Math.round(progressPercent)}%`;
+                    } else {
+                        // Standard Mode
+                        progressPercent = (currentIndex + 1) / sessionTotal * 100;
+                        progressText = `Question ${currentIndex + 1}`;
+                        progressSubText = `Progress: ${currentIndex + 1}/${sessionTotal} (${Math.round(progressPercent)}%)`;
+                    }
+
+                    return (
+                        <div className="space-y-2">
+                            <div className="h-3 bg-slate-100 rounded-full overflow-hidden relative">
+                                <div
+                                    className="h-full bg-primary rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                                    style={{ width: `${progressPercent}%` }}
+                                />
+                            </div>
+                            <div className="flex justify-between items-center mt-2 px-1">
+                                <span className="text-xs font-bold text-slate-300">Start</span>
+                                <div className="text-center">
+                                    <div className="text-sm font-bold text-primary">{progressText}</div>
+                                    <div className="text-xs font-medium text-slate-400">
+                                        {progressSubText}
+                                    </div>
+                                </div>
+                                <span className="text-xs font-bold text-slate-300">Finish</span>
                             </div>
                         </div>
-                        <span className="text-xs font-bold text-slate-300">Finish</span>
-                    </div>
-                </div>
+                    );
+                })()}
             </div>
 
             {/* Question Area */}
@@ -486,6 +574,14 @@ function PracticeSessionContent() {
                         disabled={status === 'feedback'}
                         feedback={feedback}
                         tolerance={tolerance}
+                    />
+                ) : mode === 'matching' ? (
+                    <MatchingQuestion
+                        key={(currentQuestion as MatchingQuestionType).id} // Force re-mount to reset state
+                        question={currentQuestion as MatchingQuestionType}
+                        onComplete={handleMatchingComplete}
+                        onProgress={setCurrentRoundProgress}
+                        disabled={false}
                     />
                 ) : (
                     <MultipleChoiceQuestion
